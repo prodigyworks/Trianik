@@ -23,21 +23,6 @@ if( isset($_SESSION['ERRMSG_ARR']) && is_array($_SESSION['ERRMSG_ARR']) && count
 	      <td><input required="true" name="lname" type="text" class="textfield" id="lname" /></td>
 	    </tr>
 	    <tr>
-	      <td>Account Type </td>
-	      <td>
-	      	<SELECT id="accounttype" name="accounttype" onchange="accounttype_onchange()">
-	      		<OPTION value="ADMIN">Administration</OPTION>
-	      		<OPTION value="TEAM">Team</OPTION>
-	      	</SELECT>
-	      </td>
-	    </tr>
-	    <tr id="clienttype" style="display:none">
-	      <td>Client</td>
-	      <td>
-	      	<?php createCombo("teamid", "id", "name", "{$_SESSION['DB_PREFIX']}team", "", false)?>
-	      </td>
-	    </tr>
-	    <tr>
 	      <td>Login</td>
 	      <td><input required="true" name="login" type="text" class="textfield logintext" id="login" /></td>
 	    </tr>

@@ -25,7 +25,6 @@
 	$cpassword = clean($_POST['cpassword']);
 	$email = clean($_POST['email']);
 	$cemail = clean($_POST['confirmemail']);
-	$teamid = clean($_POST['teamid']);
 	
 	$mobile = "";
 	
@@ -97,9 +96,9 @@
 		
 		//Create INSERT query
 		$qry = "INSERT INTO {$_SESSION['DB_PREFIX']}members " .
-				"(firstname, lastname, fullname, login, passwd, email, imageid, accepted, guid, status, teamid, metacreateddate, metacreateduserid, metamodifieddate, metamodifieduserid) " .
+				"(firstname, lastname, fullname, login, passwd, email, imageid, accepted, guid, status, metacreateddate, metacreateduserid, metamodifieddate, metamodifieduserid) " .
 				"VALUES" .
-				"('$fname','$lname', '$fullname', $login', '".md5($_POST['password'])."', '$email', $imageid, 'Y', '$guid', 'Y', $teamid, NOW(), " . getLoggedOnMemberID() . ", NOW(), " .  getLoggedOnMemberID() . ")";
+				"('$fname','$lname', '$fullname', '$login', '".md5($_POST['password'])."', '$email', $imageid, 'Y', '$guid', 'Y', NOW(), " . getLoggedOnMemberID() . ", NOW(), " .  getLoggedOnMemberID() . ")";
 		$result = @mysql_query($qry);
 		$memberid = mysql_insert_id();
 		
@@ -124,7 +123,6 @@
 		$_SESSION['SESS_FIRST_NAME'] = $fname;
 		$_SESSION['SESS_LAST_NAME'] = $lname;
 		$_SESSION['SESS_IMAGE_ID'] = $imageid;
-		$_SESSION['SESS_TEAM_ID'] = $teamid;
 		
 		sendRoleMessage("ADMIN", "User Registration", "User " . $login . " has been registered as a user.<br>Password : " . $_POST['password']);
 		sendUserMessage($memberid, "User Registration", "<h3>Welcome $fname $lname.</h3><br>You have been invited to become a member of 'iAfrica Database'.<br>Please click on the <a href='" . getSiteConfigData()->domainurl . "/index.php'>link</a> to activate your account.<br><br><h4>Login details</h4>User ID : $login<br>Password : " . $_POST['password']);
@@ -142,7 +140,6 @@
 				"SET email = '$email', " .
 				"firstname = '$fname', " .
 				"lastname = '$lname', " .
-				"teamid = $teamid, " .
 				"imageid = $imageid, " .
 				"lastaccessdate = NOW(), ";
 				

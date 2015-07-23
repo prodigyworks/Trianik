@@ -176,10 +176,8 @@
 	$crud->table = "{$_SESSION['DB_PREFIX']}members";
 	
 	$crud->sql = 
-			"SELECT A.*, B.name AS teamname 
+			"SELECT A.*
 			 FROM {$_SESSION['DB_PREFIX']}members A 
-			 LEFT OUTER JOIN {$_SESSION['DB_PREFIX']}team B
-			 ON B.id = A.teamid
 			 ORDER BY A.firstname, A.lastname"; 
 			
 	$crud->columns = array(
@@ -218,17 +216,6 @@
 				'length' 	 => 15,
 				'showInView' => false,
 				'label' 	 => 'Last Name'
-			),
-			array(
-				'name'       => 'teamid',
-				'type'       => 'DATACOMBO',
-				'length' 	 => 20,
-				'label' 	 => 'Team',
-				'table'		 => 'team',
-				'required'	 => true,
-				'table_id'	 => 'id',
-				'alias'		 => 'teamname',
-				'table_name' => 'name'
 			),
 			array(
 				'name'       => 'email',

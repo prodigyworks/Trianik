@@ -13,6 +13,9 @@
 			function editDocuments(node) {
 				viewDocument(node, "addteamdocument.php", node, "teamdocs", "teamid");
 			}
+			
+			function scheduleClients(node) {
+			}
 <?php			
 		}
 	}
@@ -40,6 +43,22 @@
 				'name'       => 'name',
 				'length' 	 => 30,
 				'label' 	 => 'Name'
+			),
+			array(
+				'name'       => 'status',
+				'length' 	 => 10,
+				'label' 	 => 'Status',
+				'type'       => 'COMBO',
+				'options'    => array(
+						array(
+							'value'		=> 'L',
+							'text'		=> 'Live'
+						),
+						array(
+							'value'		=> 'I',
+							'text'		=> 'Inactive'
+						)
+					)
 			),
 			array(
 				'name'       => 'imageid',
@@ -82,6 +101,11 @@
 				'title'		  => 'Documents',
 				'imageurl'	  => 'images/document.gif',
 				'script' 	  => 'editDocuments'
+			),
+			array(
+				'title'		  => 'Schedule',
+				'imageurl'	  => 'images/checkin.png',
+				'application' => 'clientschedule.php'
 			)
 		);
 		
