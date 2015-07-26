@@ -54,31 +54,31 @@
 				'type'       => 'COMBO',
 				'options'    => array(
 						array(
-							'value'		=> '1',
+							'value'		=> '0',
 							'text'		=> 'Sunday'
 						),
 						array(
-							'value'		=> '2',
+							'value'		=> '1',
 							'text'		=> 'Monday'
 						),
 						array(
-							'value'		=> '3',
+							'value'		=> '2',
 							'text'		=> 'Tuesday'
 						),
 						array(
-							'value'		=> '4',
+							'value'		=> '3',
 							'text'		=> 'Wednesday'
 						),
 						array(
-							'value'		=> '5',
+							'value'		=> '4',
 							'text'		=> 'Thursday'
 						),
 						array(
-							'value'		=> '6',
+							'value'		=> '5',
 							'text'		=> 'Friday'
 						),
 						array(
-							'value'		=> '7',
+							'value'		=> '6',
 							'text'		=> 'Saturday'
 						)
 					)

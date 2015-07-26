@@ -21,6 +21,20 @@
 	<link rel="stylesheet" href="./codebase/ext/dhtmlxscheduler_ext.css" type="text/css" media="screen" title="no title" charset="utf-8">
 	
 	<style type="text/css" media="screen">
+		.keyblock {
+			width:10px;
+			height:10px;
+			border:1px solid black;
+		}
+		.yellow {
+			background-color: yellow;
+		}
+		.red {
+			background-color: red;
+		}
+		.green {
+			background-color: green;
+		}
 		.one_line{
 			white-space:nowrap;
 			overflow:hidden;
@@ -39,6 +53,19 @@
 		$(document).ready(
 				function() {
 					init();
+
+					$("#keydialog").dialog({
+							modal: false,
+							minWidth: 90,
+							dialogClass: "kev",
+							autoOpen: true,
+							width: "auto",
+							opacity: 0.4,
+							position: ["left", "top"],
+							overlay: { opacity: 0.3, background: "white" },
+							title: "Key"
+						});
+							
 				}
 			);
 
@@ -47,10 +74,14 @@
 			
 			scheduler.locale.labels.timeline_tab = "Timeline";
 			scheduler.locale.labels.section_custom="Section";
-			scheduler.config.details_on_create=true;
-			scheduler.config.details_on_dblclick=true;
+			scheduler.config.details_on_create=false;
+			scheduler.config.dblclick_create = false;
 			scheduler.config.xml_date="%Y-%m-%d %H:%i";
-			
+			scheduler.attachEvent("onBeforeFolderToggle", function(section,isOpen,allSections){
+			    //any custom logic here
+			    alert("X");
+			    return false;
+			});			
 			scheduler.config.first_hour = 6;
 			scheduler.config.last_hour = 23;
 			//===============
@@ -87,12 +118,13 @@
 				
 			scheduler.createTimelineView({
 				name:	"timeline",
-				x_unit:	"day",
-				x_date:	"%d/%m/%y",
-				x_step:	1,
-				x_size: 7,
-				x_start: 0,
-				x_length:	7,
+				x_unit:	"minute",
+				 x_unit:"minute",//measuring unit of the X-Axis.
+			     x_date:"%H:%i", //date format of the X-Axis
+			     x_step:60,      //X-Axis step in 'x_unit's
+			     x_size:24,      //X-Axis length specified as the total number of 'x_step's
+			     x_start:0,     //X-Axis offset in 'x_unit's
+			     x_length:24,    //number of 'x_step's that will be scrolled at a time
 				y_unit:	sections,
 				y_property:	"section_id",
 				render:"bar"
@@ -115,12 +147,13 @@
 			    strEndDate += ":" + padZero(ev.end_date.getMinutes());
 			    
 				callAjax(
-						"updatebooking.php", 
+						"updateschedule.php", 
 						{ 
 							id: ev.id,
 							sectionid: ev.section_id,
 							startdate: strStartDate,
-							enddate: strEndDate
+							enddate: strEndDate,
+							mode : "<?php echo $mode;?>"
 						},
 						function(data) {
 						}
@@ -138,11 +171,8 @@
 				{name:"custom", height:23, type:"select", options:sections, map_to:"section_id" },
 				{name:"time", height:12, type:"time", map_to:"auto"}
 			];
-<?php 
-			$date = new DateTime();
-			$date->sub(new DateInterval("P" . date("w") .  "D"));
-?>		
-			scheduler.init('scheduler_here',new Date("<?php echo $date->format('Y-m-d')?>"),"timeline");
+
+			scheduler.init('scheduler_here',new Date(),"timeline");
 			scheduler.setLoadMode("day");
 			scheduler.config.show_loading = true;
 
@@ -180,15 +210,38 @@
 		<div class="dhx_cal_navline">
 			<div class="dhx_cal_prev_button">&nbsp;</div>
 			<div class="dhx_cal_next_button">&nbsp;</div>
-			<div class="dhx_cal_today_button"></div>
 			<div class="dhx_cal_date"></div>
-			<div class="dhx_cal_tab" name="day_tab" style="right:215px;"></div>
+			<div class="dhx_cal_tab" name="month_tab" style="right:85px;"></div>
+			<div class="dhx_cal_tab" name="day_tab" style="right:150px;"></div>
+			<div class="dhx_cal_tab" name="week_tab" style="right:215px;"></div>
 			<div class="dhx_cal_tab" name="timeline_tab" style="right:280px;"></div>
 		</div>
 		<div class="dhx_cal_header">
 		</div>
 		<div class="dhx_cal_data">
 		</div>		
+	</div>
+	<div id="keydialog" class="modal">
+		<table width='150px'>
+			<tr>
+				<td>No Started</td>
+				<td>
+					<div class="keyblock yellow">&nbsp;</div>
+				</td>
+			</tr>
+			<tr>
+				<td>Clocked In</td>
+				<td>
+					<div class="keyblock red">&nbsp;</div>
+				</td>
+			</tr>
+			<tr>
+				<td>Completed</td>
+				<td>
+					<div class="keyblock green">&nbsp;</div>
+				</td>
+			</tr>
+		</table>
 	</div>
 <?php 
 	include("system-footer.php");

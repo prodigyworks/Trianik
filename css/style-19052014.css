@@ -4,6 +4,21 @@
 	background: white;
 }
 
+.green-row td {
+	color: #008800 ! important;
+	font-weight: bold  ! important;
+}
+
+.yellow-row td {
+	color: yellow ! important;
+	font-weight: bold  ! important;
+}
+
+.red-row td {
+	color: red ! important;
+	font-weight: bold  ! important;
+}
+
 #divtable {
 	overflow: auto;
 	height:155px;

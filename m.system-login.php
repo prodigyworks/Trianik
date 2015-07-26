@@ -1,5 +1,5 @@
 <?php 
-	require_once("system-embeddedheader.php"); 
+	require_once("system-mobileheader.php"); 
 	require_once("confirmdialog.php");
 	
 	createConfirmDialog("loginDialog", "Forgot password ?", "forgotPassword");
@@ -45,7 +45,7 @@
 		<br/>
 		<br/>
 		<input type="hidden" id="callback" name="callback" value="<?php if (isset($_GET['session'])) echo base64_decode( urldecode( $_GET['session'])); else echo "http://" . $_SERVER['SERVER_NAME'] . $_SERVER['PHP_SELF'] . "?" . $_SERVER['QUERY_STRING']; ?>" />
-		<div><label>password</label></div>
+		<div><label>Password</label></div>
 		<input type="password" name="password" id="password" value="" />
 		<br>
 		<br>
@@ -100,4 +100,4 @@
 ?>
 <!--  End of content -->
 
-<?php include("system-embeddedfooter.php"); ?>					
+<?php include("system-mobilefooter.php"); ?>					

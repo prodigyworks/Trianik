@@ -937,10 +937,8 @@ function login($login, $password, $redirect = true) {
 	}
 	
 	//Create query
-	$qry = "SELECT DISTINCT A.*, B.imageid AS clientlogoid, B.name, B.email AS clientemail " .
+	$qry = "SELECT DISTINCT A.* " .
 		   "FROM {$_SESSION['DB_PREFIX']}members A " .
-		   "LEFT OUTER JOIN {$_SESSION['DB_PREFIX']}client B " .
-		   "ON B.id = A.clientid " .
 		   "WHERE A.login = '$login' " .
 		   "AND A.passwd = '" . md5($password) . "' " .
 		   	"AND A.accepted = 'Y'";
@@ -956,10 +954,6 @@ function login($login, $password, $redirect = true) {
 			$_SESSION['SESS_MEMBER_ID'] = $member['member_id'];
 			$_SESSION['SESS_FIRST_NAME'] = $member['firstname'];
 			$_SESSION['SESS_LAST_NAME'] = $member['lastname'];
-			$_SESSION['SESS_CLIENT_ID'] = $member['clientid'];
-			$_SESSION['SESS_CLIENT_NAME'] = $member['name'];
-			$_SESSION['SESS_CLIENT_EMAIL'] = $member['clientemail'];
-			$_SESSION['SESS_CLIENT_IMAGE_ID'] = $member['clientlogoid'];
 			
 			$qry = "SELECT * FROM {$_SESSION['DB_PREFIX']}userroles WHERE memberid = " . $_SESSION['SESS_MEMBER_ID'] . "";
 			$result=mysql_query($qry);
