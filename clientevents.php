@@ -19,8 +19,6 @@
 		exit();
 	}
 	
-	logError("START:$startdate AND $enddate", false);
-	
 	$sql = "SELECT id, name FROM {$_SESSION['DB_PREFIX']}client WHERE status = 'L' ORDER BY name";
 	$result = mysql_query($sql);
 	
@@ -46,8 +44,6 @@
 					$found = false;
 					$itemresult = mysql_query($sql);
 					
-					logError($sql, false);
-					
 					//Check whether the query was successful or not
 					if($itemresult) {
 						while (($itemmember = mysql_fetch_assoc($itemresult))) {
@@ -62,7 +58,7 @@
 						$sql = "SELECT A.* 
 								FROM {$_SESSION['DB_PREFIX']}clientschedule A 
 								WHERE A.clientid = $clientid
-								AND A.weekday = $weekday";
+								AND A.weekday = $weekday ";
 						$itemresult = mysql_query($sql);
 						
 						//Check whether the query was successful or not
@@ -70,23 +66,51 @@
 							while (($itemmember = mysql_fetch_assoc($itemresult))) {
 								$memberid = $itemmember['memberid'];
 								$status = "U";
+								$addToDiary = false;
+								$found = true;
 								
-								$starttime = $date . " " . $itemmember['starttime'];
-								$endtime = $date . " " . $itemmember['endtime'];
+								if ($itemmember['mode'] == "W") {
+									$addToDiary = true;
+									
+								} else if ($itemmember['mode'] == "T") {
+									$date1 = new DateTime($itemmember['begindate']);
+									$date2 = new DateTime($date);
+ 
+									$diff = $date2->diff($date1)->format("%a");
+									
+									if (($diff % 14) == 0) {
+										$addToDiary = true;
+									}
+									
+								} else if ($itemmember['mode'] == "F") {
+									$date1 = new DateTime($itemmember['begindate']);
+									$date2 = new DateTime($date);
+ 
+									$diff = $date2->diff($date1)->format("%a");
+									
+									if (($diff % 28) == 0) {
+										$addToDiary = true;
+									}
+								}
 								
-								$sql = "INSERT INTO {$_SESSION['DB_PREFIX']}diary
-										(
-											clientid, memberid, status, starttime, endtime
-										)
-										VALUES
-										(
-											$clientid, $memberid, '$status', '$starttime', '$endtime'
-										)";
-								/* Add record from template */
-								$insertresult = mysql_query($sql);
-
-								if (! $insertresult) {
-									logError($sql . " - " . mysql_error());
+								if ($addToDiary) {
+									$starttime = $date . " " . $itemmember['starttime'];
+									$endtime = $date . " " . $itemmember['endtime'];
+									
+									$sql = "INSERT INTO {$_SESSION['DB_PREFIX']}diary
+											(
+												clientid, memberid, status, starttime, endtime
+											)
+											VALUES
+											(
+												$clientid, $memberid, '$status', '$starttime', '$endtime'
+											)";
+									/* Add record from template */
+									$insertresult = mysql_query($sql);
+	
+									if (! $insertresult) {
+										logError($sql . " - " . mysql_error());
+									}
 								}
 							}
 							
@@ -107,7 +131,8 @@
 					ON C.member_id = A.memberid 
 					WHERE A.clientid = $clientid
 					AND A.starttime < '$enddate' 
-					AND A.endtime >= '$startdate'";
+					AND A.endtime >= '$startdate'
+					ORDER BY A.starttime";
 			$found = false;
 			$itemresult = mysql_query($sql);
 			
@@ -116,12 +141,18 @@
 				while (($itemmember = mysql_fetch_assoc($itemresult))) {
 					if ($itemmember['status'] == "U") {
 						$color = "yellow";
+						$sdate = $itemmember['starttime'];
+						$edate = $itemmember['endtime'];
 						
 					} else if ($itemmember['status'] == "I") {
+						$sdate = $itemmember['actualstarttime'];
+						$edate = $itemmember['endtime'];
 						$color = "red";
 						
 					} else {
 						$color = "green";
+						$sdate = $itemmember['actualstarttime'];
+						$edate = $itemmember['actualendtime'];
 					}
 					
 					array_push(
@@ -130,9 +161,9 @@
 									"id" => $itemmember['id'],
 									"color" => $color,
 									"textColor" => "black",
-									"start_date" => ($itemmember['starttime']),
-									"end_date" => ($itemmember['endtime']),
-									"text" => ($sectionid == "clientid" ? $itemmember['fullname'] : $itemmember['name']),
+									"start_date" => substr($itemmember['starttime'], 0, 10) . " 00:00:00",
+									"end_date" => substr($itemmember['endtime'], 0, 10) . " 23:59:59",
+									"text" => "<div class='entry'><span class='toleft'>" . ($sectionid == "clientid" ? $itemmember['fullname'] : $itemmember['name']) . "</span><span class='toright'>" . substr($sdate, 11, 5) . "-" . substr($edate, 11, 5) . "</span></div>",
 									"section_id" => $itemmember[$sectionid]
 								)
 						);

@@ -84,6 +84,32 @@
 					)
 			),
 			array(
+				'name'       => 'mode',
+				'length' 	 => 20,
+				'label' 	 => 'Schedule',
+				'type'       => 'COMBO',
+				'options'    => array(
+						array(
+							'value'		=> 'W',
+							'text'		=> 'Weekly'
+						),
+						array(
+							'value'		=> 'T',
+							'text'		=> 'Two Weekly'
+						),
+						array(
+							'value'		=> 'F',
+							'text'		=> 'Four Weekly'
+						)
+					)
+			),
+			array(
+				'name'       => 'begindate',
+				'datatype'	 => 'date',
+				'length' 	 => 12,
+				'label' 	 => 'Start From'
+			),
+			array(
 				'name'       => 'starttime',
 				'datatype'	 => 'time',
 				'length' 	 => 12,

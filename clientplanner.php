@@ -1,5 +1,5 @@
 <?php 
-	$mode = "C";
+	$mode = "S";
 	
 	include("system-header.php");
 	
@@ -17,10 +17,27 @@
 	?>
 	<script src='./codebase/dhtmlxscheduler.js' type="text/javascript" charset="utf-8"></script>
 	<script src='./codebase/ext/dhtmlxscheduler_timeline.js' type="text/javascript" charset="utf-8"></script>
+	<script src='js/jquery.ui.timepicker.js'></script>
 	<link rel='STYLESHEET' type='text/css' href='./codebase/dhtmlxscheduler_glossy.css'>
 	<link rel="stylesheet" href="./codebase/ext/dhtmlxscheduler_ext.css" type="text/css" media="screen" title="no title" charset="utf-8">
 	
 	<style type="text/css" media="screen">
+		.entry {
+			display: block;
+			font-size:9px;
+		}
+		.toleft {
+			display: inline-block;
+			width:60px;
+		}
+		.toright {
+			display: inline-block;
+			float:right;
+			width:53px;
+			padding-right: 2px;
+			padding-left: 2px;
+			background-color: white;
+		}
 		.keyblock {
 			width:10px;
 			height:10px;
@@ -61,9 +78,48 @@
 							autoOpen: true,
 							width: "auto",
 							opacity: 0.4,
-							position: ["left", "top"],
+							position: ["center", "top"],
 							overlay: { opacity: 0.3, background: "white" },
 							title: "Key"
+						});
+							
+
+					$("#editdialog").dialog({
+							modal: true,
+							dialogClass: "kev",
+							autoOpen: false,
+							width: "auto",
+							opacity: 0.4,
+							overlay: { opacity: 0.3, background: "white" },
+							title: "Edit",
+							buttons: {
+								Ok: function() {
+									callAjax(
+											"updateschedule.php", 
+											{ 
+												id: $("#eventid").val(),
+												status: $("#status").val(),
+												clientid: $("#clientid").val(),
+												memberid: $("#memberid").val(),
+												startdate: $("#entrydate").val(),
+												enddate: $("#entrydate").val(),
+												starttime: $("#starttime").val(),
+												endtime: $("#endtime").val()
+											},
+											function(data) {
+											},
+											false
+										);
+
+									scheduler.clearAll();
+									scheduler.setCurrentView(null, "timeline");
+									
+									$("#editdialog").dialog("close");
+								},
+								Cancel: function() {
+									$("#editdialog").dialog("close");
+								}
+							}
 						});
 							
 				}
@@ -76,10 +132,62 @@
 			scheduler.locale.labels.section_custom="Section";
 			scheduler.config.details_on_create=false;
 			scheduler.config.dblclick_create = false;
+			scheduler.config.drag_in = false;
+	      	scheduler.attachEvent("onBeforeDrag",function(){return false;})
+	      	scheduler.attachEvent("onDblClick",function(){return false;})
+	      	scheduler.attachEvent("onClick",function(node) {
+				callAjax(
+						"finddata.php", 
+						{ 
+							sql: "SELECT A.*, " + 
+								 "DATE_FORMAT(A.starttime, '%d/%m/%Y') AS startdate, " + 
+								 "DATE_FORMAT(A.starttime, '%H:%i') AS starttime, " + 
+								 "DATE_FORMAT(A.endtime, '%d/%m/%Y') AS enddate, " + 
+								 "DATE_FORMAT(A.endtime, '%H:%i') AS endtime, " + 
+								 "DATE_FORMAT(A.actualstarttime, '%d/%m/%Y') AS actualstartdate, " + 
+								 "DATE_FORMAT(A.actualstarttime, '%H:%i') AS actualstarttime, " + 
+								 "DATE_FORMAT(A.actualendtime, '%d/%m/%Y') AS actualenddate, " + 
+								 "DATE_FORMAT(A.actualendtime, '%H:%i') AS actualendtime " + 
+								 "FROM <?php echo $_SESSION['DB_PREFIX']; ?>diary A " +
+								 "WHERE id = " + node
+						},
+						function(data) {
+							if (data.length == 1) {
+								var node = data[0];
+
+								if (node.status == "U") {
+									$("#entrydate").val(node.startdate);
+									$("#starttime").val(node.starttime);
+									$("#endtime").val(node.endtime);
+									
+								} else if ($itemmember['status'] == "I") {
+									$("#entrydate").val(node.actualstartdate);
+									$("#starttime").val(node.actualstarttime);
+									$("#endtime").val(node.endtime);
+									
+								} else {
+									$("#entrydate").val(node.actualstartdate);
+									$("#starttime").val(node.actualstarttime);
+									$("#endtime").val(node.actualendtime);
+								}
+
+								$("#status").val(node.status);
+								$("#eventid").val(node.id);
+								$("#clientid").val(node.clientid);
+								$("#memberid").val(node.memberid);
+							}
+						},
+						false
+					);
+		      		
+		      		$("#editdialog").dialog("open");
+		      		
+			      	return false;
+		      	});
+	      	scheduler.attachEvent("onClick",function(){return false;})
 			scheduler.config.xml_date="%Y-%m-%d %H:%i";
 			scheduler.attachEvent("onBeforeFolderToggle", function(section,isOpen,allSections){
 			    //any custom logic here
-			    alert("X");
 			    return false;
 			});			
 			scheduler.config.first_hour = 6;
@@ -118,13 +226,12 @@
 				
 			scheduler.createTimelineView({
 				name:	"timeline",
-				x_unit:	"minute",
-				 x_unit:"minute",//measuring unit of the X-Axis.
-			     x_date:"%H:%i", //date format of the X-Axis
-			     x_step:60,      //X-Axis step in 'x_unit's
-			     x_size:24,      //X-Axis length specified as the total number of 'x_step's
+				 x_unit:"day",//measuring unit of the X-Axis.
+			     x_date:"%D %d %M %y", //date format of the X-Axis
+			     x_step:1,      //X-Axis step in 'x_unit's
+			     x_size:7,      //X-Axis length specified as the total number of 'x_step's
 			     x_start:0,     //X-Axis offset in 'x_unit's
-			     x_length:24,    //number of 'x_step's that will be scrolled at a time
+			     x_length:7,    //number of 'x_step's that will be scrolled at a time
 				y_unit:	sections,
 				y_property:	"section_id",
 				render:"bar"
@@ -220,6 +327,52 @@
 		</div>
 		<div class="dhx_cal_data">
 		</div>		
+	</div>
+	<div id="editdialog" class="modal">
+		<input type="hidden" id="eventid" />
+		<input type="hidden" id="status" />
+		<table>
+			<tr>
+				<td>
+					Client
+				</td>
+				<td>
+					<?php createCombo("clientid", "id", "name", "{$_SESSION['DB_PREFIX']}client"); ?>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					Cleaner
+				</td>
+				<td>
+					<?php createCombo("memberid", "member_id", "fullname", "{$_SESSION['DB_PREFIX']}members"); ?>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					Date
+				</td>
+				<td>
+					<input class="datepicker" type="text" id="entrydate"  />
+				</td>
+			</tr>
+			<tr>
+				<td>
+					Start Time
+				</td>
+				<td>
+					<input class="timepicker" type="text" id="starttime"  />
+				</td>
+			</tr>
+			<tr>
+				<td>
+					End Time
+				</td>
+				<td>
+					<input class="timepicker" type="text" id="endtime"  />
+				</td>
+			</tr>
+		</table>
 	</div>
 	<div id="keydialog" class="modal">
 		<table width='150px'>

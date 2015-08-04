@@ -144,32 +144,7 @@
 				'script' 	  => 'live'
 			)
 		);
-	$crud->checkconstraints = array(
-			array(
-				'table'      => 'applicationtables',
-				'column' 	 => 'memberid'
-			),
-			array(
-				'table'      => 'applicationtables',
-				'column' 	 => 'memberid'
-			),
-			array(
-				'table'      => 'errors',
-				'column' 	 => 'memberid'
-			),
-			array(
-				'table'      => 'filter',
-				'column' 	 => 'memberid'
-			),
-			array(
-				'table'      => 'loginaudit',
-				'column' 	 => 'memberid'
-			),
-			array(
-				'table'      => 'userroles',
-				'column' 	 => 'memberid'
-			)
-		);
+
 	$crud->allowAdd = false;
 	$crud->dialogwidth = 950;
 	$crud->title = "Users";
@@ -291,6 +266,19 @@
 				'label' 	 => 'Confirm Password'
 			)
 		);
-		
+
+	$crud->subapplications = array(
+			array(
+				'title'		  => 'Documents',
+				'imageurl'	  => 'images/document.gif',
+				'script' 	  => 'editDocuments'
+			),
+			array(
+				'title'		  => 'Rota',
+				'imageurl'	  => 'images/checkin.png',
+				'application' => 'userrota.php'
+			)
+		);
+				
 	$crud->run();
 ?>

@@ -4,23 +4,34 @@
 	start_db();
 	
 	$id = $_POST['id'];
-	$sectionid = $_POST['sectionid'];
-	$startdate = convertStringToDateTime($_POST['startdate']);
-	$enddate = convertStringToDateTime($_POST['enddate']);
-	$mode = $_POST['mode'];
+	$clientid = $_POST['clientid'];
+	$memberid = $_POST['memberid'];
+	$startdate = convertStringToDate($_POST['startdate']) . " " . $_POST['starttime'];
+	$enddate = convertStringToDate($_POST['enddate']) . " " . $_POST['endtime'];
+	$status = $_POST['status'];
 	
-	if ($mode == "C") {
+	if ($status == "U") {
 		$sql = "UPDATE {$_SESSION['DB_PREFIX']}diary SET 
 				starttime = '$startdate', 
 				endtime = '$enddate', 
-				clientid = $sectionid
+				memberid = $memberid,
+				clientid = $clientid
+				WHERE id = $id";
+
+	} else if ($status == "I") {
+		$sql = "UPDATE {$_SESSION['DB_PREFIX']}diary SET 
+				actualstarttime = '$startdate', 
+				endtime = '$enddate', 
+				memberid = $memberid,
+				clientid = $clientid
 				WHERE id = $id";
 
 	} else {
 		$sql = "UPDATE {$_SESSION['DB_PREFIX']}diary SET 
-				starttime = '$startdate', 
-				endtime = '$enddate', 
-				memberid = $sectionid
+				actualstarttime = '$startdate', 
+				actualendtime = '$enddate', 
+				memberid = $memberid,
+				clientid = $clientid
 				WHERE id = $id";
 	}
 	

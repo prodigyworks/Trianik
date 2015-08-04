@@ -11,17 +11,12 @@
 							</div>
 						</div>
 					</TD>
-					<TD style="BACKGROUND: url(images/shadow_right.png)" width=17>
-						&nbsp;
-					</TD>
 				</tr>
 				<tr>
 					<td>
 					</td>
 				</tr>
 			</table>
-		</div>
-	</div>
 <div class="modal" id="alertdialog">
 	<table>
 		<tr>
