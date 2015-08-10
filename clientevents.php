@@ -7,6 +7,7 @@
 	$enddatetime = ($_GET['to']);
 	$enddate = ($_GET['to']);
 	$json = array();
+	$memberarray = array();
 	
 	if ($_GET['mode'] == "S") {
 		$sectionid = "memberid";
@@ -155,14 +156,21 @@
 						$edate = $itemmember['actualendtime'];
 					}
 					
+					$weekday = date("w", strtotime($sdate));
+					$key = $itemmember['memberid'] . "_" . $weekday;
+					
+					if (! in_array($key, $memberarray)) {
+						array_push($memberarray, $key);
+					}
+					
 					array_push(
 							$json, 
 							array(
 									"id" => $itemmember['id'],
 									"color" => $color,
 									"textColor" => "black",
-									"start_date" => substr($itemmember['starttime'], 0, 10) . " 00:00:00",
-									"end_date" => substr($itemmember['endtime'], 0, 10) . " 23:59:59",
+									"start_date" => substr($sdate, 0, 10) . " 00:00:00",
+									"end_date" => substr($edate, 0, 10) . " 23:59:59",
 									"text" => "<div class='entry'><span class='toleft'>" . ($sectionid == "clientid" ? $itemmember['fullname'] : $itemmember['name']) . "</span><span class='toright'>" . substr($sdate, 11, 5) . "-" . substr($edate, 11, 5) . "</span></div>",
 									"section_id" => $itemmember[$sectionid]
 								)
@@ -179,6 +187,86 @@
 		logError($sql . " - " . mysql_error());
 	}
 	
+	if ($_GET['mode'] == "S") {
+		$date = $startdate;
+	
+		while (strtotime($date) < strtotime($enddate)) {
+			$weekday = date("w", strtotime($date));
+			
+			$sql = "SELECT A.member_id 
+					FROM {$_SESSION['DB_PREFIX']}members A 
+					ORDER BY member_id";
+			$found = false;
+			$result = mysql_query($sql);
+			
+			//Check whether the query was successful or not
+			if ($result) {
+				while (($member = mysql_fetch_assoc($result))) {
+					$memberid = $member['member_id'];
+					$key = $member['member_id'] . "_" . $weekday;
+						
+					$found = false;
+					$sql = "SELECT A.* 
+							FROM {$_SESSION['DB_PREFIX']}memberrota A 
+							WHERE memberid = $memberid
+							AND weekday = $weekday";
+					$itemresult = mysql_query($sql);
+					
+					//Check whether the query was successful or not
+					if ($itemresult) {
+						while (($itemmember = mysql_fetch_assoc($itemresult))) {
+							$found = true;
+						}
+					}
+					
+					if (! $found && ! in_array($key, $memberarray)) {
+						array_push(
+								$json, 
+								array(
+										"id" => "MEM" . $memberid . " " . $weekday,
+										"color" => "#F0F0F0",
+										"textColor" => "black",
+										"start_date" => "$date 00:00:00",
+										"end_date" => "$date 23:59:59",
+										"text" => "Not working",
+										"section_id" => $memberid
+									)
+							);
+					}
+				}
+			}
+			
+			$date = date ("Y-m-d", strtotime("+1 day", strtotime($date)));
+		}
+		
+		$sql = "SELECT A.* 
+				FROM {$_SESSION['DB_PREFIX']}holiday A 
+				WHERE startdate <= '$enddate' 
+				AND enddate >= '$startdate' ";
+		$result = mysql_query($sql);
+		
+		//Check whether the query was successful or not
+		if ($result) {
+			while (($member = mysql_fetch_assoc($result))) {
+				$sdate = $member['startdate'];
+				$edate = $member['enddate'];
+				
+				array_push(
+						$json, 
+						array(
+								"id" => "HOL" . $member['id'],
+								"color" => "blue",
+								"textColor" => "white",
+								"start_date" => "$sdate 00:00:00",
+								"end_date" => "$edate 23:59:59",
+								"text" => "Holiday",
+								"section_id" => $member['memberid']
+							)
+					);
+			}
+		}
+	}
+
 	mysql_query("COMMIT");
 	
 	echo json_encode($json);

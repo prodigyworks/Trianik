@@ -146,7 +146,7 @@
 		);
 
 	$crud->allowAdd = false;
-	$crud->dialogwidth = 950;
+	$crud->dialogwidth = 1000;
 	$crud->title = "Users";
 	$crud->table = "{$_SESSION['DB_PREFIX']}members";
 	
@@ -208,6 +208,38 @@
 				'label' 	 => 'Mobile'
 			),
 			array(
+				'name'       => 'landline',
+				'length' 	 => 13,
+				'label' 	 => 'Work Phone'
+			),
+			array(
+				'name'       => 'address',
+				'length' 	 => 60,
+				'type'		 => 'BASICTEXTAREA',
+				'showInView' => false,
+				'label' 	 => 'Address'
+			),
+			array(
+				'name'       => 'billingaddress',
+				'length' 	 => 60,
+				'type'		 => 'BASICTEXTAREA',
+				'showInView' => false,
+				'label' 	 => 'Billing Address'
+			),
+			array(
+				'name'       => 'paperfreebillingaddress',
+				'length' 	 => 60,
+				'type'		 => 'BASICTEXTAREA',
+				'showInView' => false,
+				'label' 	 => 'Paper Free Billing Address'
+			),
+			array(
+				'name'       => 'holidayentitlement',
+				'length' 	 => 10,
+				'align' 	 => 'center',
+				'label' 	 => 'Entitlement'
+			),
+			array(
 				'name'       => 'status',
 				'length' 	 => 6,
 				'label' 	 => 'Status',
@@ -224,24 +256,33 @@
 					)
 			),
 			array(
-				'name'       => 'imageid',
-				'type'		 => 'IMAGE',
-				'length' 	 => 64,
-				'required'	 => false,
-				'showInView' => false,
-				'label' 	 => 'Image'
+				'name'       => 'paymentmethod',
+				'length' 	 => 12,
+				'label' 	 => 'Payment Method',
+				'type'       => 'COMBO',
+				'options'    => array(
+						array(
+							'value'		=> 'C',
+							'text'		=> 'Cheque'
+						),
+						array(
+							'value'		=> 'B',
+							'text'		=> 'Bank Transfer'
+						),
+						array(
+							'value'		=> 'R',
+							'text'		=> 'Credit Card'
+						),
+						array(
+							'value'		=> 'D',
+							'text'		=> 'Debit Card'
+						)
+					)
 			),
 			array(
 				'name'       => 'title',
 				'length'	 => 10,
 				'label' 	 => 'Title'
-			),
-			array(
-				'name'       => 'address',
-				'type'		 => 'TEXTAREA',
-				'showInView' => false,
-				'filter'     => false,
-				'label' 	 => 'Address'
 			),
 			array(
 				'name'       => 'description',

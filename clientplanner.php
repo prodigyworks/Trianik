@@ -46,6 +46,12 @@
 		.yellow {
 			background-color: yellow;
 		}
+		.blue {
+			background-color: blue;
+		}
+		.grey {
+			background-color: #E0E0E0;
+		}
 		.red {
 			background-color: red;
 		}
@@ -392,6 +398,18 @@
 				<td>Completed</td>
 				<td>
 					<div class="keyblock green">&nbsp;</div>
+				</td>
+			</tr>
+			<tr>
+				<td>Not Working</td>
+				<td>
+					<div class="keyblock grey">&nbsp;</div>
+				</td>
+			</tr>
+			<tr>
+				<td>Holiday</td>
+				<td>
+					<div class="keyblock blue">&nbsp;</div>
 				</td>
 			</tr>
 		</table>
