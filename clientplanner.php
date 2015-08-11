@@ -138,8 +138,7 @@
 			scheduler.locale.labels.section_custom="Section";
 			scheduler.config.details_on_create=false;
 			scheduler.config.dblclick_create = false;
-			scheduler.config.drag_in = false;
-	      	scheduler.attachEvent("onBeforeDrag",function(){return false;})
+			scheduler.config.drag_in = false;	      	scheduler.attachEvent("onBeforeDrag",function(){return false;})
 	      	scheduler.attachEvent("onDblClick",function(){return false;})
 	      	scheduler.attachEvent("onClick",function(node) {
 				callAjax(
@@ -243,39 +242,6 @@
 				render:"bar"
 			});
 				
-			scheduler.attachEvent("onBeforeEventChanged", function(ev, e, is_new){
-			    //any custom logic here
-			    var strStartDate, strEndDate;
-
-			    strStartDate = padZero(ev.start_date.getDate());
-			    strStartDate += "/" + padZero(ev.start_date.getMonth() + 1);
-			    strStartDate += "/" + (1900 + ev.start_date.getYear());
-			    strStartDate += " " + padZero(ev.start_date.getHours());
-			    strStartDate += ":" + padZero(ev.start_date.getMinutes());
-			    
-			    strEndDate = padZero(ev.end_date.getDate());
-			    strEndDate += "/" + padZero(ev.end_date.getMonth() + 1);
-			    strEndDate += "/" + (1900 + ev.end_date.getYear());
-			    strEndDate += " " + padZero(ev.end_date.getHours());
-			    strEndDate += ":" + padZero(ev.end_date.getMinutes());
-			    
-				callAjax(
-						"updateschedule.php", 
-						{ 
-							id: ev.id,
-							sectionid: ev.section_id,
-							startdate: strStartDate,
-							enddate: strEndDate,
-							mode : "<?php echo $mode;?>"
-						},
-						function(data) {
-						}
-					);
-
-			    return true;
-			    
-			});			
-			
 			//===============
 			//Data loading
 			//===============
@@ -284,8 +250,13 @@
 				{name:"custom", height:23, type:"select", options:sections, map_to:"section_id" },
 				{name:"time", height:12, type:"time", map_to:"auto"}
 			];
+<?php 
+			$date = new DateTime(date("Y-m-d"));
+			$date->sub(new DateInterval("P" . ($date->format('w')) . "D"));
+			$date->add(new DateInterval("P1D"));
+?>			
 
-			scheduler.init('scheduler_here',new Date(),"timeline");
+			scheduler.init('scheduler_here',new Date("<?php echo $date->format('Y-m-d'); ?>"),"timeline");
 			scheduler.setLoadMode("day");
 			scheduler.config.show_loading = true;
 
@@ -324,9 +295,8 @@
 			<div class="dhx_cal_prev_button">&nbsp;</div>
 			<div class="dhx_cal_next_button">&nbsp;</div>
 			<div class="dhx_cal_date"></div>
-			<div class="dhx_cal_tab" name="month_tab" style="right:85px;"></div>
-			<div class="dhx_cal_tab" name="day_tab" style="right:150px;"></div>
-			<div class="dhx_cal_tab" name="week_tab" style="right:215px;"></div>
+			<div class="dhx_cal_tab" name="month_tab" style="right:150px;"></div>
+			<div class="dhx_cal_tab" name="day_tab" style="right:215px;"></div>
 			<div class="dhx_cal_tab" name="timeline_tab" style="right:280px;"></div>
 		</div>
 		<div class="dhx_cal_header">
