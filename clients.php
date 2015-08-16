@@ -11,17 +11,18 @@
 		public function postScriptEvent() {
 ?>
 			function editDocuments(node) {
-				viewDocument(node, "addteamdocument.php", node, "teamdocs", "teamid");
+				viewDocument(node, "addclientdocument.php", node, "clientdocs", "clientid");
 			}
 			
-			function scheduleClients(node) {
+			function newStarterForm(node) {
+				window.open("newstarterreport.php?id=" + node);
 			}
 <?php			
 		}
 	}
 	
 	$crud = new ClientCrud();
-	$crud->dialogwidth = 650;
+	$crud->dialogwidth = 800;
 	$crud->title = "Client";
 	$crud->table = "{$_SESSION['DB_PREFIX']}client";
 	$crud->sql = "SELECT A.*
@@ -61,14 +62,6 @@
 					)
 			),
 			array(
-				'name'       => 'imageid',
-				'type'		 => 'IMAGE',
-				'required'   => false,
-				'length' 	 => 35,
-				'showInView' => false,
-				'label' 	 => 'Logo'
-			),			
-			array(
 				'name'       => 'firstname',
 				'length' 	 => 15,
 				'label' 	 => 'First Name'
@@ -78,6 +71,26 @@
 				'length' 	 => 15,
 				'label' 	 => 'Last Name'
 			),			
+			array(
+				'name'       => 'address',
+				'length' 	 => 12,
+				'showInView' => false,
+				'type'		 => 'BASICTEXTAREA',
+				'label' 	 => 'Address'
+			),
+			array(
+				'name'       => 'billingaddress',
+				'length' 	 => 12,
+				'showInView' => false,
+				'type'		 => 'BASICTEXTAREA',
+				'label' 	 => 'Billing Address'
+			),
+			array(
+				'name'       => 'paperfreebillingaddress',
+				'length' 	 => 60,
+				'showInView' => false,
+				'label' 	 => 'Paper Free Biling Address'
+			),
 			array(
 				'name'       => 'email',
 				'length' 	 => 40,
@@ -89,10 +102,40 @@
 				'label' 	 => 'Telephone'
 			),
 			array(
-				'name'       => 'fax',
+				'name'       => 'mobile',
 				'length' 	 => 12,
 				'required' 	 => false,
-				'label' 	 => 'Fax'
+				'label' 	 => 'Mobile'
+			),
+			array(
+				'name'       => 'workphone',
+				'length' 	 => 12,
+				'required' 	 => false,
+				'label' 	 => 'Work Phone'
+			),
+			array(
+				'name'       => 'paymentmethod',
+				'length' 	 => 10,
+				'label' 	 => 'Paymenth Method',
+				'type'       => 'COMBO',
+				'options'    => array(
+						array(
+							'value'		=> 'Q',
+							'text'		=> 'Cheque'
+						),
+						array(
+							'value'		=> 'B',
+							'text'		=> 'Bank Transfer'
+						),
+						array(
+							'value'		=> 'C',
+							'text'		=> 'Credit Card'
+						),
+						array(
+							'value'		=> 'D',
+							'text'		=> 'Debit Card'
+						)
+					)
 			)
 		);
 
@@ -106,6 +149,11 @@
 				'title'		  => 'Schedule',
 				'imageurl'	  => 'images/checkin.png',
 				'application' => 'clientschedule.php'
+			),
+			array(
+				'title'		  => 'New Starter Form',
+				'imageurl'	  => 'images/print.png',
+				'script' 	  => 'newStarterForm'
 			)
 		);
 		
