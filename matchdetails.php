@@ -50,9 +50,6 @@
 		
 	} else {
 		$teamid = getLoggedOnTeamID();
-		$crud->allowAdd = false;
-		$crud->allowEdit = false;
-		$crud->allowRemove = false;
 		$crud->sql = "SELECT A.*, 
 					  B.name AS refereename, 
 					  C.name AS submittedteamname, 
