@@ -5,9 +5,10 @@
 	
 	$id = $_POST['id'];
 	
-	$sql = "DELETE FROM {$_SESSION['DB_PREFIX']}diary  
+	$sql = "UPDATE {$_SESSION['DB_PREFIX']}diary  
+			SET deleted = 'Y'
 			WHERE id = $id";
-	
+	logError("$sql", false);
 	if (! mysql_query($sql)) {
 		logError($sql . " - " . mysql_error());
 	}

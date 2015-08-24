@@ -2,7 +2,6 @@
 	include "system-db.php";
 	
 	start_db();
-							logError("START", false);
 	
 	$startdate = ($_GET['from']);
 	$enddatetime = ($_GET['to']);
@@ -136,7 +135,8 @@
 					ON B.id = A.clientid 
 					INNER JOIN {$_SESSION['DB_PREFIX']}members C
 					ON C.member_id = A.memberid 
-					WHERE A.clientid = $clientid
+					WHERE A.deleted = 'N'
+					AND A.clientid = $clientid
 					AND A.starttime < '$enddate' 
 					AND A.endtime >= '$startdate'
 					ORDER BY A.starttime";
@@ -226,7 +226,6 @@
 					}
 					
 					if (! $found && ! in_array($key, $memberarray)) {
-						logError("NOT IN", false);
 						array_push(
 								$json, 
 								array(

@@ -1782,6 +1782,10 @@ iframe {
 	padding:10px;
 }
 
+.basicform {
+	padding: 5px;
+}
+
 .reportform table td {
 	padding:3px;
 }
