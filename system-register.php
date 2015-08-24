@@ -13,7 +13,7 @@ if( isset($_SESSION['ERRMSG_ARR']) && is_array($_SESSION['ERRMSG_ARR']) && count
 <div class="registerPage">
 	<h4>Staff Registry</h4>
 	<form id="loginForm" enctype="multipart/form-data" name="loginForm" class="entryform manualform" method="post" action="system-register-exec.php">
-	  <table border="0" align="left">
+	  <table border="0" align="left" cellspacing=7>
 	    <tr>
 	      <td>First Name </td>
 	      <td><input required="true" name="fname" type="text" class="textfield" id="fname" /></td>
@@ -35,8 +35,12 @@ if( isset($_SESSION['ERRMSG_ARR']) && is_array($_SESSION['ERRMSG_ARR']) && count
 	      <td><input required="true" name="confirmemail" type="text" class="textfield60" id="confirmemail" /></td>
 	    </tr>
 	    <tr>
-	      <td>Image</td>
-	      <td><input name="image" type="file" class="textfield60" id="image" /></td>
+	      <td>Mobile</td>
+	      <td><input name="mobile" type="text" size=14 id="mobile" /></td>
+	    </tr>
+	    <tr>
+	      <td>Holiday Entitlement</td>
+	      <td><input name="entitlement" type="text" size=5 id="entitlement" /></td>
 	    </tr>
 	    <tr>
 	    	<td colspan="2">

@@ -2,6 +2,7 @@
 	include "system-db.php";
 	
 	start_db();
+							logError("START", false);
 	
 	$startdate = ($_GET['from']);
 	$enddatetime = ($_GET['to']);
@@ -80,6 +81,11 @@
 									$diff = $date2->diff($date1)->format("%a");
 									
 									if (($diff % 14) == 0) {
+										$addToDiary = true;
+									}
+									
+								} else if ($itemmember['mode'] == "O") {
+									if (strtotime($itemmember['begindate']) == strtotime($date)) {
 										$addToDiary = true;
 									}
 									
@@ -220,6 +226,7 @@
 					}
 					
 					if (! $found && ! in_array($key, $memberarray)) {
+						logError("NOT IN", false);
 						array_push(
 								$json, 
 								array(

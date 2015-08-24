@@ -2,7 +2,26 @@
 	require_once("crud.php");
 	
 	class ClientCrud extends Crud {
-		
+		/* Post script event. */
+		public function postScriptEvent() {
+?>
+			function mode_onchange() {
+				if ($(this).val() == "O") {
+					$("#weekday").attr("readonly", true);
+					
+					if ($("#startdate").val() != "") {
+						var parts = $("#startdate").val().split('/');
+						var date = new Date(parts[2], parts[0] - 1, parts[1]);
+						
+						$("#weekday").val(date.getDay());
+					}
+					
+				} else {
+					$("#weekday").attr("readonly", false);
+				}
+			}
+<?php
+		}
 	}
 	
 	$clientid = $_GET['id'];
@@ -86,9 +105,14 @@
 			array(
 				'name'       => 'mode',
 				'length' 	 => 20,
+				'onchange'	 => 'mode_onchange',
 				'label' 	 => 'Schedule',
 				'type'       => 'COMBO',
 				'options'    => array(
+						array(
+							'value'		=> 'O',
+							'text'		=> 'One Off'
+						),
 						array(
 							'value'		=> 'W',
 							'text'		=> 'Weekly'

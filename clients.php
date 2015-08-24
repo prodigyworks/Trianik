@@ -22,7 +22,7 @@
 	}
 	
 	$crud = new ClientCrud();
-	$crud->dialogwidth = 800;
+	$crud->dialogwidth = 950;
 	$crud->title = "Client";
 	$crud->table = "{$_SESSION['DB_PREFIX']}client";
 	$crud->sql = "SELECT A.*
@@ -88,6 +88,7 @@
 			array(
 				'name'       => 'paperfreebillingaddress',
 				'length' 	 => 60,
+				'required'	 => false,
 				'showInView' => false,
 				'label' 	 => 'Paper Free Biling Address'
 			),
@@ -114,6 +115,104 @@
 				'label' 	 => 'Work Phone'
 			),
 			array(
+				'name'       => 'frequency',
+				'length' 	 => 20,
+				'label' 	 => 'Frequence',
+				'type'       => 'COMBO',
+				'options'    => array(
+						array(
+							'value'		=> 'O',
+							'text'		=> 'One Off'
+						),
+						array(
+							'value'		=> 'W',
+							'text'		=> 'Weekly'
+						),
+						array(
+							'value'		=> 'T',
+							'text'		=> 'Two Weekly'
+						),
+						array(
+							'value'		=> 'F',
+							'text'		=> 'Four Weekly'
+						)
+					)
+			),
+			array(
+				'name'       => 'startdate',
+				'length' 	 => 12,
+				'datatype'	 => 'date',
+				'required' 	 => false,
+				'label' 	 => 'Start Date'
+			),
+			array(
+				'name'       => 'hoursrequired',
+				'length' 	 => 12,
+				'align'		 => 'right',
+				'required' 	 => false,
+				'label' 	 => 'Hours Required'
+			),
+			array(
+				'name'       => 'preferreddaytime',
+				'length' 	 => 60,
+				'required' 	 => false,
+				'label' 	 => 'Preferred Day And Time'
+			),
+			array(
+				'name'       => 'numberofbedrooms',
+				'length' 	 => 12,
+				'align'		 => 'right',
+				'required' 	 => false,
+				'label' 	 => 'Number Of Bedrooms'
+			),
+			array(
+				'name'       => 'numberofbathrooms',
+				'length' 	 => 12,
+				'align'		 => 'right',
+				'required' 	 => false,
+				'label' 	 => 'Number Of Bathrooms'
+			),
+			array(
+				'name'       => 'valuablestoberemoved',
+				'length' 	 => 12,
+				'showInView' => false,
+				'type'		 => 'BASICTEXTAREA',
+				'required' 	 => false,
+				'label' 	 => 'Valuable items to be removed or not cleaned'
+			),
+			array(
+				'name'       => 'vacuum',
+				'length' 	 => 10,
+				'label' 	 => 'Vacuum',
+				'type'       => 'COMBO',
+				'options'    => array(
+						array(
+							'value'		=> 'Y',
+							'text'		=> 'Yes'
+						),
+						array(
+							'value'		=> 'N',
+							'text'		=> 'No'
+						)
+					)
+			),
+			array(
+				'name'       => 'ironingrequired',
+				'length' 	 => 10,
+				'label' 	 => 'Ironing Required',
+				'type'       => 'COMBO',
+				'options'    => array(
+						array(
+							'value'		=> 'Y',
+							'text'		=> 'Yes'
+						),
+						array(
+							'value'		=> 'N',
+							'text'		=> 'No'
+						)
+					)
+			),
+			array(
 				'name'       => 'paymentmethod',
 				'length' 	 => 10,
 				'label' 	 => 'Paymenth Method',
@@ -136,6 +235,49 @@
 							'text'		=> 'Debit Card'
 						)
 					)
+			),
+			array(
+				'name'       => 'numberofkeysgiven',
+				'length' 	 => 12,
+				'align'		 => 'right',
+				'required' 	 => false,
+				'label' 	 => 'Number Of Keys Given'
+			),
+			array(
+				'name'       => 'alarmfobgiven',
+				'length' 	 => 10,
+				'label' 	 => 'Alarm Fob Given',
+				'type'       => 'COMBO',
+				'options'    => array(
+						array(
+							'value'		=> 'Y',
+							'text'		=> 'Yes'
+						),
+						array(
+							'value'		=> 'N',
+							'text'		=> 'No'
+						)
+					)
+			),
+			array(
+				'name'       => 'alarmcodes',
+				'length' 	 => 6,
+				'required' 	 => false,
+				'label' 	 => 'Alarm Codes'
+			),
+			array(
+				'name'       => 'accessinstructions',
+				'length' 	 => 60,
+				'required' 	 => false,
+				'label' 	 => 'Access Instructions'
+			),
+			array(
+				'name'       => 'specificrequirements',
+				'length' 	 => 12,
+				'showInView' => false,
+				'type'		 => 'BASICTEXTAREA',
+				'required' 	 => false,
+				'label' 	 => 'Specific Requirements'
 			)
 		);
 

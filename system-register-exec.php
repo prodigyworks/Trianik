@@ -5,13 +5,6 @@
 	
 	start_db();
 	
-	try {
-		$imageid = getImageData("image", 100, 100);	
-		
-	} catch (Exception $e) {
-		$errmsg_arr[] = $e->getMessage();
-	}
-	
 	//Array to store validation errors
 	$errmsg_arr = array();
 	
@@ -21,12 +14,12 @@
 	//Sanitize the POST values
 	$fname = clean($_POST['fname']);
 	$lname = clean($_POST['lname']);
+	$entitlement = clean($_POST['entitlement']);
 	$password = clean($_POST['password']);
 	$cpassword = clean($_POST['cpassword']);
 	$email = clean($_POST['email']);
 	$cemail = clean($_POST['confirmemail']);
-	
-	$mobile = "";
+	$mobile = clean($_POST['mobile']);
 	
 	//Input Validations
 	if($fname == '') {
@@ -78,6 +71,9 @@
 		exit();
 	}
 	
+	$pwd = md5($password);
+	$loggedon = getLoggedOnMemberID();
+	
 	if (! isset($_GET['id'])) {
 		//Check for duplicate login ID
 		if($login != '') {
@@ -95,10 +91,18 @@
 		$fullname = $fname . " " . $lname;
 		
 		//Create INSERT query
-		$qry = "INSERT INTO {$_SESSION['DB_PREFIX']}members " .
-				"(firstname, lastname, fullname, login, passwd, email, imageid, accepted, guid, status, metacreateddate, metacreateduserid, metamodifieddate, metamodifieduserid) " .
-				"VALUES" .
-				"('$fname','$lname', '$fullname', '$login', '".md5($_POST['password'])."', '$email', $imageid, 'Y', '$guid', 'Y', NOW(), " . getLoggedOnMemberID() . ", NOW(), " .  getLoggedOnMemberID() . ")";
+		$qry = "INSERT INTO {$_SESSION['DB_PREFIX']}members 
+				(
+				firstname, lastname, fullname, login, passwd, mobile,
+				email, holidayentitlement, accepted, guid, status, 
+				metacreateddate, metacreateduserid, metamodifieddate, metamodifieduserid
+				) 
+				VALUES
+				(
+				'$fname','$lname', '$fullname', '$login', '$pwd', '$mobile',
+				'$email', $entitlement, 'Y', '$guid', 'Y', 
+				NOW(), $loggedon, NOW(), $loggedon
+				)";
 		$result = @mysql_query($qry);
 		$memberid = mysql_insert_id();
 		
@@ -120,10 +124,6 @@
 			$result = @mysql_query($qry);
 		}
 		
-		$_SESSION['SESS_FIRST_NAME'] = $fname;
-		$_SESSION['SESS_LAST_NAME'] = $lname;
-		$_SESSION['SESS_IMAGE_ID'] = $imageid;
-		
 		sendRoleMessage("ADMIN", "User Registration", "User " . $login . " has been registered as a user.<br>Password : " . $_POST['password']);
 		sendUserMessage($memberid, "User Registration", "<h3>Welcome $fname $lname.</h3><br>You have been invited to become a member of 'iAfrica Database'.<br>Please click on the <a href='" . getSiteConfigData()->domainurl . "/index.php'>link</a> to activate your account.<br><br><h4>Login details</h4>User ID : $login<br>Password : " . $_POST['password']);
 		
@@ -136,19 +136,17 @@
 		
 	} else {
 		$memberid = $_GET['id'];
-		$qry = "UPDATE {$_SESSION['DB_PREFIX']}members " .
-				"SET email = '$email', " .
-				"firstname = '$fname', " .
-				"lastname = '$lname', " .
-				"imageid = $imageid, " .
-				"lastaccessdate = NOW(), ";
-				
-		if (isset($_POST['postcode'])) {
-			$qry .= "postcode = '$postcode', ";
-		}
 		
-		$qry .= "passwd = '" . md5($password) . "', metamodifieddate = NOW(), metamodifieduserid = " . getLoggedOnMemberID() . " " .
-				"WHERE member_id = " . $_GET['id'];
+		$qry = "UPDATE {$_SESSION['DB_PREFIX']}members 
+				SET email = '$email', 
+				firstname = '$fname', 
+				lastname = '$lname', 
+				mobile = '$mobile',
+				lastaccessdate = NOW(),
+				passwd = '$pwd', 
+				metamodifieddate = NOW(), 
+				metamodifieduserid = $loggedon
+				WHERE member_id = $memberid";
 		$result = mysql_query($qry);
 
 		if (! $result) {
@@ -157,7 +155,6 @@
 		
 		$_SESSION['SESS_FIRST_NAME'] = $fname;
 		$_SESSION['SESS_LAST_NAME'] = $lname;
-		$_SESSION['SESS_IMAGE_ID'] = $imageid;
 		
 		sendRoleMessage("ADMIN", "User Amendment", "<h3>User amendment.</h3><br>Your details have been amended by the System Administration.<br>Your password has been changed to: <i>$password</i>.");
 		sendUserMessage($memberid, "User Amendment", "<h3>User amendment.</h3><br>Your details have been amended by the System Administration.<br>Your password has been changed to: <i>$password</i>.");

@@ -14,6 +14,11 @@
 			display: block;
 			font-size:9px;
 		}
+		#scheduler_here {
+			text-align: left ! important;
+			padding: 0px ! important;
+			margin: 0px ! important;
+		}
 		.toleft {
 			display: inline-block;
 			width:60px;
@@ -150,6 +155,9 @@
 			scheduler.load("clientevents.php?mode=<?php echo $mode; ?>","json",function(){
 			    // alert("Data has been successfully loaded");
 			    scheduler.updateCollection("sections",sections );
+
+				window.print();
+		    
 			});
 			var dp = new dataProcessor("clientevents.php");
 			dp.init(scheduler);
@@ -157,9 +165,10 @@
 		
 		function modSchedHeight(){
 			var sch = document.getElementById("scheduler_here");
-			sch.style.height = (document.body.offsetHeight - 20) + "px";
+			sch.style.height = "600px";
+			sch.style.width = "960px";
 			var contbox = document.getElementById("contbox");
-			contbox.style.width = (parseInt(document.body.offsetWidth)-300)+"px";
+//			contbox.style.width = "100px";
 		}
 	</script>
 	<div style="height:0px;background-color:#3D3D3D;border-bottom:5px solid #828282;">

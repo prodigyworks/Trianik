@@ -26,7 +26,7 @@
 			$this->AddPage();
 			
 			try {
-				$sql = "SELECT * 
+				$sql = "SELECT *, DATE_FORMAT(A.startdate, '%d/%m/%Y') AS startdate
 						FROM {$_SESSION['DB_PREFIX']}client A 
 						WHERE id = $id";
 				$result = mysql_query($sql);
@@ -217,9 +217,36 @@
 
 						$this->addText( 10, 232, "Keyholding", 10, 4, '', 30);
 						$this->addText( 50, 218, "Number of keys given ?", 8, 3, 'B');
+						$this->addText( 93, 218, $member['numberofkeysgiven'], 8, 3, 'B');
+						
 						$this->addText( 50, 226, "Alarm Fob been given ?", 8, 3, 'B');
+						$this->addText( 93, 226, $member['alarmfobgiven'] == "Y" ? "Yes" : "No", 8, 3, 'B');
+						
 						$this->addText( 50, 234, "Alarm Codes", 8, 3, 'B');
+						
+						if (strlen($member['alarmcodes']) >= 1) {
+							$this->addText( 95, 234, substr($member['alarmcodes'], 0, 1), 8, 3, 'B');
+						}
+						
+						if (strlen($member['alarmcodes']) >= 2) {
+							$this->addText( 105, 234, substr($member['alarmcodes'], 1, 1), 8, 3, 'B');
+						}
+						
+						if (strlen($member['alarmcodes']) >= 3) {
+							$this->addText( 115, 234, substr($member['alarmcodes'], 2, 1), 8, 3, 'B');
+						}
+												
+						if (strlen($member['alarmcodes']) >= 4) {
+							$this->addText( 125, 234, substr($member['alarmcodes'], 3, 1), 8, 3, 'B');
+						}
+												
+						if (strlen($member['alarmcodes']) >= 5) {
+							$this->addText( 135, 234, substr($member['alarmcodes'], 4, 1), 8, 3, 'B');
+						}
+						
 						$this->addText( 50, 242, "Access Instructions", 8, 3, 'B');
+						$this->addText( 93, 242, $member['accessinstructions'], 8, 3, 'B');
+						
 						$this->addText( 50, 250, "Trianik take responsibility of your keys, they will be given a keyring with its own unique code, never displaying names or address, we will only gain access to your property at mutually agreed times.", 8, 3, 'B', 146);
 						
 						$this->addText( 10, 270, "Access Authorisation", 10, 4, '', 30);
@@ -272,25 +299,51 @@
 						$this->Line(106.3, 20.9, 106.3, 44);
 						$this->Line(147.9, 20.9, 147.9, 44);
 						
+						if ($member['frequency'] == "O") {
+							$frequency = "One Off";
+							
+						} else if ($member['frequency'] == "W") {
+							$frequency = "Weekly";
+							
+						} else if ($member['frequency'] == "T") {
+							$frequency = "Two Weekly";
+							
+						} else if ($member['frequency'] == "F") {
+							$frequency = "Four Weekly";
+
+						} else {
+							$frequency = "";
+						}
+						
 						$this->addText( 10, 23, "Frequency of cleaning", 10, 4, '');
+						$this->addText( 50, 23, $frequency, 8, 3, '');
+						
 						$this->addText( 110, 23, "Start Date", 10, 4, '');
-
+						$this->addText( 150, 23, $member['startdate'], 8, 3, '');
+						
 						$this->addText( 10, 31, "Hours Required", 10, 4, '');
+						$this->addText( 50, 31, $member['hoursrequired'], 8, 3, '');
+						
 						$this->addText( 110, 31, "Preferred day/time", 10, 4, '');
-
+						$this->addText( 150, 31, $member['preferreddaytime'], 8, 3, '');
+						
 						$this->addText( 10, 38, "Number of Bedrooms", 10, 4, '');
+						$this->addText( 50, 38, $member['numberofbedrooms'], 8, 3, '');
+						
 						$this->addText( 110, 38, "Number of Bathrooms", 10, 4, '');
-
+						$this->addText( 150, 38, $member['numberofbathrooms'], 8, 3, '');
+						
 						$this->addText( 10, 45, "Valuable items to be removed or not cleaned", 10, 4, '', 34);
+						$this->addText( 50, 45, $member['valuablestoberemoved'], 8, 3, '');
+						
 						$this->addText( 10, 60, "Vacuum", 10, 4, '', 30);
+						$this->addText( 50, 60, $member['vacuum'] == "Y" ? "Yes" : "No", 8, 3, '');
+						
 						$this->addText( 10, 67, "Ironing required", 10, 4, '', 30);
+						$this->addText( 50, 67, $member['ironingrequired'] == "Y" ? "Yes" : "No", 8, 3, '');
+												
 						$this->addText( 10, 74, "Specific Cleaning Requirements", 10, 4, '', 32);
-
-						$this->addText( 50, 74, "Jobs for every visit", 10, 4, 'UI');
-						$this->addText( 50, 114, "Jobs for every other visit", 10, 4, 'UI');
-						$this->addText( 50, 154, "Occasional requirements", 10, 4, 'UI');
-						$this->addText( 50, 194, "Jobs to be done only when asked", 10, 4, 'UI');
-						$this->addText( 50, 244, "DO NOT DO:", 10, 4, 'UI');
+						$this->addText( 50, 74, $member['specificrequirements'], 8, 3, '');
 					}
 					
 				} else {

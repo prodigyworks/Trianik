@@ -146,7 +146,7 @@
 		);
 
 	$crud->allowAdd = false;
-	$crud->dialogwidth = 1000;
+	$crud->dialogwidth = 500;
 	$crud->title = "Users";
 	$crud->table = "{$_SESSION['DB_PREFIX']}members";
 	
@@ -174,7 +174,7 @@
 			array(
 				'name'       => 'staffname',
 				'type'		 => 'DERIVED',
-				'length' 	 => 23,
+				'length' 	 => 45,
 				'bind'		 => false,
 				'function'   => 'fullName',
 				'sortcolumn' => 'A.firstname',
@@ -182,56 +182,25 @@
 			),
 			array(
 				'name'       => 'firstname',
-				'length' 	 => 15,
+				'length' 	 => 25,
 				'showInView' => false,
 				'label' 	 => 'First Name'
 			),
 			array(
 				'name'       => 'lastname',
-				'length' 	 => 15,
+				'length' 	 => 25,
 				'showInView' => false,
 				'label' 	 => 'Last Name'
 			),
 			array(
 				'name'       => 'email',
-				'length' 	 => 30,
+				'length' 	 => 50,
 				'label' 	 => 'Email'
-			),
-			array(
-				'name'       => 'landline',
-				'length' 	 => 13,
-				'label' 	 => 'Land line'
 			),
 			array(
 				'name'       => 'mobile',
 				'length' 	 => 13,
 				'label' 	 => 'Mobile'
-			),
-			array(
-				'name'       => 'landline',
-				'length' 	 => 13,
-				'label' 	 => 'Work Phone'
-			),
-			array(
-				'name'       => 'address',
-				'length' 	 => 60,
-				'type'		 => 'BASICTEXTAREA',
-				'showInView' => false,
-				'label' 	 => 'Address'
-			),
-			array(
-				'name'       => 'billingaddress',
-				'length' 	 => 60,
-				'type'		 => 'BASICTEXTAREA',
-				'showInView' => false,
-				'label' 	 => 'Billing Address'
-			),
-			array(
-				'name'       => 'paperfreebillingaddress',
-				'length' 	 => 60,
-				'type'		 => 'BASICTEXTAREA',
-				'showInView' => false,
-				'label' 	 => 'Paper Free Billing Address'
 			),
 			array(
 				'name'       => 'holidayentitlement',
@@ -241,7 +210,7 @@
 			),
 			array(
 				'name'       => 'status',
-				'length' 	 => 6,
+				'length' 	 => 12,
 				'label' 	 => 'Status',
 				'type'       => 'COMBO',
 				'options'    => array(
@@ -254,42 +223,6 @@
 							'text'		=> 'Expired'
 						)
 					)
-			),
-			array(
-				'name'       => 'paymentmethod',
-				'length' 	 => 12,
-				'label' 	 => 'Payment Method',
-				'type'       => 'COMBO',
-				'options'    => array(
-						array(
-							'value'		=> 'C',
-							'text'		=> 'Cheque'
-						),
-						array(
-							'value'		=> 'B',
-							'text'		=> 'Bank Transfer'
-						),
-						array(
-							'value'		=> 'R',
-							'text'		=> 'Credit Card'
-						),
-						array(
-							'value'		=> 'D',
-							'text'		=> 'Debit Card'
-						)
-					)
-			),
-			array(
-				'name'       => 'title',
-				'length'	 => 10,
-				'label' 	 => 'Title'
-			),
-			array(
-				'name'       => 'description',
-				'type'		 => 'TEXTAREA',
-				'showInView' => false,
-				'filter'     => false,
-				'label' 	 => 'Details'
 			),
 			array(
 				'name'       => 'passwd',

@@ -122,6 +122,22 @@
 									
 									$("#editdialog").dialog("close");
 								},
+								"Remove": function() {
+									callAjax(
+											"removeschedule.php", 
+											{ 
+												id: $("#eventid").val()
+											},
+											function(data) {
+											},
+											false
+										);
+
+									scheduler.clearAll();
+									scheduler.setCurrentView(null, "timeline");
+									
+									$("#editdialog").dialog("close");
+								},
 								Cancel: function() {
 									$("#editdialog").dialog("close");
 								}
@@ -138,7 +154,13 @@
 			scheduler.locale.labels.section_custom="Section";
 			scheduler.config.details_on_create=false;
 			scheduler.config.dblclick_create = false;
-			scheduler.config.drag_in = false;	      	scheduler.attachEvent("onBeforeDrag",function(){return false;})
+			scheduler.config.drag_in = false;	      	
+			scheduler.attachEvent("onBeforeViewChange", function (old_mode, old_date, mode, date) {
+			    if (old_mode != mode || +old_date != +date)
+			        scheduler.clearAll();
+			    return true;
+			});
+			scheduler.attachEvent("onBeforeDrag",function(){return false;})
 	      	scheduler.attachEvent("onDblClick",function(){return false;})
 	      	scheduler.attachEvent("onClick",function(node) {
 				callAjax(
@@ -279,10 +301,15 @@
 			call("clientmode");
 		}
 
+		function printSchedule() {
+			window.open("clientplannerdetails.php?mode=<?php echo $mode; ?>");
+		}
+
 		function staffmode() {
 			call("staffmode");
 		}
 	</script>
+	<div onclick="printSchedule()" style="font-size:11px; position:absolute; left:140px; top:62px; z-index:100" class="dhx_cal_today_button">&nbsp;&nbsp;Print</div>
 	<div onclick="clientmode()" style="font-size:11px; position:absolute; left:460px; top:62px; z-index:100" class="dhx_cal_today_button">&nbsp;&nbsp;Clients</div>
 	<div onclick="staffmode()" style="font-size:11px; position:absolute; left:530px; top:62px; z-index:100" class="dhx_cal_today_button">&nbsp;Staff</div>
 	<div style="height:0px;background-color:#3D3D3D;border-bottom:5px solid #828282;">
