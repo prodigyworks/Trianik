@@ -8,6 +8,7 @@
 	$enddate = ($_GET['to']);
 	$json = array();
 	$memberarray = array();
+	$emailarray = array();
 	
 	if ($_GET['mode'] == "S") {
 		$sectionid = "memberid";
@@ -67,6 +68,7 @@
 							while (($itemmember = mysql_fetch_assoc($itemresult))) {
 								$memberid = $itemmember['memberid'];
 								$status = "U";
+								$scheduleid = $itemmember['id'];
 								$addToDiary = false;
 								$found = true;
 								
@@ -105,17 +107,21 @@
 									
 									$sql = "INSERT INTO {$_SESSION['DB_PREFIX']}diary
 											(
-												clientid, memberid, status, starttime, endtime
+												clientid, memberid, status, starttime, endtime, scheduleid
 											)
 											VALUES
 											(
-												$clientid, $memberid, '$status', '$starttime', '$endtime'
+												$clientid, $memberid, '$status', '$starttime', '$endtime', $scheduleid
 											)";
 									/* Add record from template */
 									$insertresult = mysql_query($sql);
 	
 									if (! $insertresult) {
 										logError($sql . " - " . mysql_error());
+									}
+									
+									if (! in_array($memberid, $emailarray)) {
+										array_push($memberarray, $key);
 									}
 								}
 							}

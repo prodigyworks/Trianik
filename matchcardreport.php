@@ -126,7 +126,7 @@
 						}
 
 						$dynamicY = 153 + $this->margin;
-						$dynamicY = $this->addText( 15, $dynamicY, "CLUB / MANAGERS REPORT (Including the FA Respect Codes of Conduct)", 10, 4, 'B') + 2;
+						$dynamicY = $this->addText( 15, $dynamicY, "CLUB / MANAGERS REPORT (Including Trianik Planning System Respect Codes of Conduct)", 10, 4, 'B') + 2;
 						
 						if ($this->headermember['age'] < 12) {
     						$this->addText( 15, $dynamicY, "Referee", 10, 4, '');

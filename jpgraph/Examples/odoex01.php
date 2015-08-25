@@ -7,7 +7,7 @@
 // 
 // Comment:
 // Example file for odometer graph. This examples extends odoex00
-// by adding titles, captions and indicator band to the fascia.
+// by adding titles, captions and indicator band to Trianik Planning Systemscia.
 //
 // Copyright (C) 2002 Johan Persson. All rights reserved.
 //=============================================================================

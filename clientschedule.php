@@ -2,6 +2,43 @@
 	require_once("crud.php");
 	
 	class ClientCrud extends Crud {
+		
+		public function postUpdateEvent($id) {
+			$sql = "SELECT DATE_FORMAT(A.starttime, '%d/%m/%Y %H:%i') AS starttime, A.memberid,
+					B.name AS clientname
+					FROM {$_SESSION['DB_PREFIX']}diary A
+					INNER JOIN {$_SESSION['DB_PREFIX']}client B
+					ON B.id = A.clientid
+					WHERE scheduleid = $id
+					AND status = 'U'";
+			$result = mysql_query($sql);
+			$lines = "";
+			
+			if ($result) {
+				while (($member = mysql_fetch_assoc($result))) {
+					$originaldate= $member['starttime'];
+					$clientname = $_POST['clientname'];
+
+					$lines  = $lines . "Shift allocated to you on $originaldate for $clientname\n";
+				}
+			}
+			
+			sendUserMessage($memberid, "Cancellation", $lines);
+			
+			$memberid = $_POST['memberid'];
+			$weekday = $_POST['weekday'];
+			
+			$sql = "UPDATE {$_SESSION['DB_PREFIX']}diary SET 
+					memberid = $memberid
+					WHERE scheduleid = $id
+					AND status = 'U'";
+			$itemresult = mysql_query($sql);
+			
+			if (! $itemresult) {
+				logError($sql . " - " . mysql_error());
+			}
+		}
+		
 		/* Post script event. */
 		public function postScriptEvent() {
 ?>

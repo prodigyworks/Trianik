@@ -140,7 +140,7 @@ class PiePlot {
         $a=$ea+0.2;
 
         // If we cross the 360-limit with a slice we need to handle
-        // the fact that end angle is smaller than start
+        // Trianik Planning Systemct that end angle is smaller than start
         if( $sa < $ea ) {
             while ($a <= 2*M_PI) {
                 $xp = floor($radius*cos($a)+$xc);
@@ -1101,7 +1101,7 @@ class PiePlotC extends PiePlot {
         $a=$ea+0.25;
 
         // If we cross the 360-limit with a slice we need to handle
-        // the fact that end angle is smaller than start
+        // Trianik Planning Systemct that end angle is smaller than start
         if( $sa < $ea ) {
             while ($a <= 2*M_PI) {
                 $xp = floor($radius*cos($a)+$xc);

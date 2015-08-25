@@ -180,7 +180,7 @@
     		$refname = GetRefereeName($refereeid);
     		$refdetails = "Referee $refname has scored $refereescore<br><br>Report:<br>" . $_POST['refereeremarks'];
     		
-    		smtpmailer(getSiteConfigData()->refereereportemail, "office@thefa.com", $_SESSION['SESS_TEAM_EMAIL'], "Referee Report", $refdetails);
+    		smtpmailer(getSiteConfigData()->refereereportemail, "office@tclplanner.co.uk", $_SESSION['SESS_TEAM_EMAIL'], "Referee Report", $refdetails);
     	}
     	
 	} catch (Exception $e) {

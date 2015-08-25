@@ -11,6 +11,28 @@
 	$status = $_POST['status'];
 	
 	if ($status == "U") {
+		$sql = "SELECT DATE_FORMAT(A.starttime, '%d/%m/%Y %H:%i') AS starttime, A.memberid,
+				B.name AS clientname, C.name AS originalclientname
+				FROM {$_SESSION['DB_PREFIX']}diary A
+				INNER JOIN {$_SESSION['DB_PREFIX']}client B
+				ON B.id = A.clientid
+				INNER JOIN {$_SESSION['DB_PREFIX']}client C
+				ON C.id = $clientid
+				WHERE id = $id";
+		$result = mysql_query($sql);
+		
+		if ($result) {
+			while (($member = mysql_fetch_assoc($result))) {
+				$memberid = $member['id'];
+				$originaldate= $member['starttime'];
+				$originalclient = $member['clientname'];
+				$date = $_POST['startdate'];
+				$clientname = $_POST['originalclientname'];
+				
+				sendUserMessage($memberid, "Cancellation", "The shift originally allocated on $originaldate for $originalclient has been moved to $date for $clientname");
+			}
+		}
+		
 		$sql = "UPDATE {$_SESSION['DB_PREFIX']}diary SET 
 				starttime = '$startdate', 
 				endtime = '$enddate', 
