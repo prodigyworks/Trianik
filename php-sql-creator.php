@@ -647,3 +647,4 @@ if (!defined('HAVE_PHP_SQL_CREATOR')) {
 
     define('HAVE_PHP_SQL_CREATOR', 1);
 }
+?>

@@ -1,6 +1,19 @@
 <?php 
 	include "system-db.php";
 	
+	function getTimeDifference($starttime, $endtime) {
+		$startmins = (substr($starttime, 0, 2) * 60) + substr($starttime, 3, 2);
+		$endmins = (substr($endtime, 0, 2) * 60) + substr($endtime, 3, 2);
+		$diff = $endmins - $startmins;
+		$time = "";
+		
+		$hours = number_format(($diff / 60), 1) . " hrs";
+		
+		logError($hours, false);
+		
+		return $hours;
+	}
+	
 	start_db();
 	
 	$startdate = ($_GET['from']);
@@ -21,7 +34,7 @@
 		exit();
 	}
 	
-	$sql = "SELECT id, name FROM {$_SESSION['DB_PREFIX']}client WHERE status = 'L' ORDER BY name";
+	$sql = "SELECT id, name FROM {$_SESSION['DB_PREFIX']}client WHERE status = 'L' ORDER BY name DESC";
 	$result = mysql_query($sql);
 	
 	//Check whether the query was successful or not
@@ -141,6 +154,7 @@
 					ON B.id = A.clientid 
 					INNER JOIN {$_SESSION['DB_PREFIX']}members C
 					ON C.member_id = A.memberid 
+					AND C.member_id != 1
 					WHERE A.deleted = 'N'
 					AND A.clientid = $clientid
 					AND A.starttime < '$enddate' 
@@ -181,9 +195,10 @@
 									"id" => $itemmember['id'],
 									"color" => $color,
 									"textColor" => "black",
+    								"true_start_date" => "$sdate",
 									"start_date" => substr($sdate, 0, 10) . " 00:00:00",
 									"end_date" => substr($edate, 0, 10) . " 23:59:59",
-									"text" => "<div class='entry'><span class='toleft'>" . ($sectionid == "clientid" ? $itemmember['fullname'] : $itemmember['name']) . "</span><span class='toright'>" . substr($sdate, 11, 5) . "-" . substr($edate, 11, 5) . "</span></div>",
+									"text" => "<div class='entry'><span class='toleft'>" . ($sectionid == "clientid" ? $itemmember['fullname'] : $itemmember['name']) . "</span><span class='toright'>" . substr($sdate, 11, 5) . "-" . substr($edate, 11, 5) . " " . getTimeDifference(substr($sdate, 11), substr($edate, 11))  . "</span></div>",
 									"section_id" => $itemmember[$sectionid]
 								)
 						);
@@ -207,6 +222,7 @@
 			
 			$sql = "SELECT A.member_id 
 					FROM {$_SESSION['DB_PREFIX']}members A 
+					WHERE A.member_id != 1
 					ORDER BY member_id";
 			$found = false;
 			$result = mysql_query($sql);
@@ -240,7 +256,8 @@
 										"textColor" => "black",
 										"start_date" => "$date 00:00:00",
 										"end_date" => "$date 23:59:59",
-										"text" => "Not working",
+										"true_start_date" => "$date 00:00:00",
+										"text" => "Not-working",
 										"section_id" => $memberid
 									)
 							);
@@ -271,7 +288,36 @@
 								"textColor" => "white",
 								"start_date" => "$sdate 00:00:00",
 								"end_date" => "$edate 23:59:59",
+								"true_start_date" => "$date 00:00:00",
 								"text" => "Holiday",
+								"section_id" => $member['memberid']
+							)
+					);
+			}
+		}
+		
+		$sql = "SELECT A.* 
+				FROM {$_SESSION['DB_PREFIX']}absence A 
+				WHERE startdate <= '$enddate' 
+				AND enddate >= '$startdate' ";
+		$result = mysql_query($sql);
+		
+		//Check whether the query was successful or not
+		if ($result) {
+			while (($member = mysql_fetch_assoc($result))) {
+				$sdate = $member['startdate'];
+				$edate = $member['enddate'];
+				
+				array_push(
+						$json, 
+						array(
+								"id" => "ABS" . $member['id'],
+								"color" => "purple",
+								"textColor" => "white",
+								"start_date" => "$sdate 00:00:00",
+								"end_date" => "$edate 23:59:59",
+								"true_start_date" => "$date 00:00:00",
+								"text" => $member['absencetype'],
 								"section_id" => $member['memberid']
 							)
 					);

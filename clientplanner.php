@@ -33,7 +33,8 @@
 		.toright {
 			display: inline-block;
 			float:right;
-			width:53px;
+			width:71px;
+			font-size:8px;
 			padding-right: 2px;
 			padding-left: 2px;
 			background-color: white;
@@ -51,6 +52,9 @@
 		}
 		.grey {
 			background-color: #E0E0E0;
+		}
+		.purple {
+			background-color: purple;
 		}
 		.red {
 			background-color: red;
@@ -155,6 +159,7 @@
 			scheduler.config.details_on_create=false;
 			scheduler.config.dblclick_create = false;
 			scheduler.config.drag_in = false;	      	
+			
 			scheduler.attachEvent("onBeforeViewChange", function (old_mode, old_date, mode, date) {
 			    if (old_mode != mode || +old_date != +date)
 			        scheduler.clearAll();
@@ -225,7 +230,7 @@
 			var sections=[
 <?php 
 				if ($mode == "S") {
-					$sql = "SELECT member_id AS id, fullname AS name FROM {$_SESSION['DB_PREFIX']}members ORDER BY fullname	";
+					$sql = "SELECT member_id AS id, fullname AS name FROM {$_SESSION['DB_PREFIX']}members WHERE member_id != 1 ORDER BY fullname	";
 
 				} else if ($mode == "C") {
 					$sql = "SELECT id, name FROM {$_SESSION['DB_PREFIX']}client WHERE status = 'L' ORDER BY name";
@@ -261,7 +266,12 @@
 			     x_length:7,    //number of 'x_step's that will be scrolled at a time
 				y_unit:	sections,
 				y_property:	"section_id",
-				render:"bar"
+				render:"bar",
+				sort:function(a, b){
+				    var val = a.true_start_date > b.true_start_date ? 1 : -1;
+
+				    return val;
+                }
 			});
 				
 			//===============
@@ -407,6 +417,12 @@
 				<td>Holiday</td>
 				<td>
 					<div class="keyblock blue">&nbsp;</div>
+				</td>
+			</tr>
+			<tr>
+				<td>Absence</td>
+				<td>
+					<div class="keyblock purple">&nbsp;</div>
 				</td>
 			</tr>
 		</table>

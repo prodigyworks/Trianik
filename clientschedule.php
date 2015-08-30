@@ -2,40 +2,43 @@
 	require_once("crud.php");
 	
 	class ClientCrud extends Crud {
+		public $clientid;
+		
+		private function getWeekDay($weekday) {
+			if ($weekday == 0) return "Sunday";
+			if ($weekday == 1) return "Monday";
+			if ($weekday == 2) return "Tuesday";
+			if ($weekday == 3) return "Wednesday";
+			if ($weekday == 4) return "Thursday";
+			if ($weekday == 5) return "Friday";
+			if ($weekday == 6) return "Saturday";
+			
+			return "N/A";
+		}
 		
 		public function postUpdateEvent($id) {
-			$sql = "SELECT DATE_FORMAT(A.starttime, '%d/%m/%Y %H:%i') AS starttime, A.memberid,
-					B.name AS clientname
-					FROM {$_SESSION['DB_PREFIX']}diary A
-					INNER JOIN {$_SESSION['DB_PREFIX']}client B
-					ON B.id = A.clientid
-					WHERE scheduleid = $id
-					AND status = 'U'";
+			$sql = "SELECT A.name AS clientname
+					FROM {$_SESSION['DB_PREFIX']}client A
+					WHERE id = " . $this->clientid;
 			$result = mysql_query($sql);
-			$lines = "";
-			
+
 			if ($result) {
 				while (($member = mysql_fetch_assoc($result))) {
-					$originaldate= $member['starttime'];
-					$clientname = $_POST['clientname'];
-
-					$lines  = $lines . "Shift allocated to you on $originaldate for $clientname\n";
+					$clientname = $member['clientname'];
+					$lines = "Shift allocated to you on " . $this->getWeekDay($_POST['weekday']) . " " . $_POST['starttime'] . "-" . $_POST['endtime'] . " for $clientname\n";
+					$memberid = $_POST['memberid'];
+	    			
+	    			sendUserMessage($memberid, "Work Allocation", $lines);
+	    			
+	    			$sql = "DELETE FROM {$_SESSION['DB_PREFIX']}diary 
+	    					WHERE scheduleid = $id
+	    					AND status = 'U'";
+	    			$itemresult = mysql_query($sql);
+	    			
+	    			if (! $itemresult) {
+	    				logError($sql . " - " . mysql_error());
+	    			}
 				}
-			}
-			
-			sendUserMessage($memberid, "Cancellation", $lines);
-			
-			$memberid = $_POST['memberid'];
-			$weekday = $_POST['weekday'];
-			
-			$sql = "UPDATE {$_SESSION['DB_PREFIX']}diary SET 
-					memberid = $memberid
-					WHERE scheduleid = $id
-					AND status = 'U'";
-			$itemresult = mysql_query($sql);
-			
-			if (! $itemresult) {
-				logError($sql . " - " . mysql_error());
 			}
 		}
 		
@@ -43,27 +46,19 @@
 		public function postScriptEvent() {
 ?>
 			function mode_onchange() {
-				if ($(this).val() == "O") {
-					$("#weekday").attr("readonly", true);
-					
-					if ($("#startdate").val() != "") {
-						var parts = $("#startdate").val().split('/');
-						var date = new Date(parts[2], parts[0] - 1, parts[1]);
-						
-						$("#weekday").val(date.getDay());
-					}
-					
-				} else {
-					$("#weekday").attr("readonly", false);
+				if ($("#begindate").val() != "") {
+					var parts = $("#begindate").val().split('/');
+					var date = new Date(parts[2], parts[1] - 1, parts[0]);
+
+					$("#weekday").val(date.getDay());
 				}
 			}
 <?php
 		}
 	}
 	
-	$clientid = $_GET['id'];
-	
 	$crud = new ClientCrud();
+	$crud->clientid = $_GET['id'];
 	$crud->title = "Client Schedule";
 	$crud->table = "{$_SESSION['DB_PREFIX']}clientschedule";
 	$crud->sql = "SELECT A.*, B.name, C.fullname
@@ -72,7 +67,7 @@
 				  ON B.id = A.clientid
 				  LEFT OUTER JOIN {$_SESSION['DB_PREFIX']}members C
 				  ON C.member_id = A.memberid
-				  WHERE A.clientid = $clientid
+				  WHERE A.clientid = " . $crud->clientid . "
 				  ORDER BY A.weekday, A.starttime";
 	$crud->columns = array(
 			array(
@@ -93,7 +88,7 @@
 				'showInView' => false,
 				'filter'	 => false,
 				'editable' 	 => false,
-				'default'	 => $clientid,
+				'default'	 => $crud->clientid,
 				'label' 	 => 'Client'
 			),
 			array(
@@ -106,6 +101,7 @@
 			array(
 				'name'       => 'weekday',
 				'length' 	 => 20,
+				'onchange'	 => 'mode_onchange',
 				'label' 	 => 'Weekday',
 				'type'       => 'COMBO',
 				'options'    => array(
@@ -167,6 +163,7 @@
 			array(
 				'name'       => 'begindate',
 				'datatype'	 => 'date',
+				'onchange'	 => 'mode_onchange',
 				'length' 	 => 12,
 				'label' 	 => 'Start From'
 			),

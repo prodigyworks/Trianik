@@ -40,7 +40,7 @@
 			try {
 				$sql = "SELECT SUM((endtime - starttime) / 1000) AS hours,  B.name AS customername
 						FROM {$_SESSION['DB_PREFIX']}diary A 
-						LEFT OUTER JOIN {$_SESSION['DB_PREFIX']}client B 
+						INNER JOIN {$_SESSION['DB_PREFIX']}client B 
 						ON B.id = A.clientid 
 						WHERE A.status IN ('I', 'C')
 						AND YEAR(A.starttime) = $year
