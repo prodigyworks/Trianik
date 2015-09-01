@@ -16,7 +16,15 @@
 			return "N/A";
 		}
 		
+		public function postInsertEvent() {
+			$this->notifyCleaner(mysql_insert_id());
+		}
+		
 		public function postUpdateEvent($id) {
+			$this->notifyCleaner($id);
+		}
+		
+		public function notifyCleaner($id) {
 			$sql = "SELECT A.name AS clientname
 					FROM {$_SESSION['DB_PREFIX']}client A
 					WHERE id = " . $this->clientid;

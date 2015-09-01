@@ -192,7 +192,7 @@
 									$("#starttime").val(node.starttime);
 									$("#endtime").val(node.endtime);
 									
-								} else if ($itemmember['status'] == "I") {
+								} else if (node.status == "I") {
 									$("#entrydate").val(node.actualstartdate);
 									$("#starttime").val(node.actualstarttime);
 									$("#endtime").val(node.endtime);

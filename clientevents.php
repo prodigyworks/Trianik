@@ -9,8 +9,6 @@
 		
 		$hours = number_format(($diff / 60), 1) . " hrs";
 		
-		logError($hours, false);
-		
 		return $hours;
 	}
 	
@@ -50,30 +48,36 @@
 				
 				while (strtotime($date) < strtotime($enddate)) {
 					$weekday = date("w", strtotime($date));
-					
-					$sql = "SELECT A.* 
-							FROM {$_SESSION['DB_PREFIX']}diary A 
-							WHERE clientid = $clientid
-							AND starttime >= '$date' 
-							AND endtime <= '$date 23:59:59'";
 					$found = false;
-					$itemresult = mysql_query($sql);
 					
-					//Check whether the query was successful or not
-					if($itemresult) {
-						while (($itemmember = mysql_fetch_assoc($itemresult))) {
-							$found = true;
-						}
-						
-					} else {
-						logError($sql . " - " . mysql_error());
-					}
+//					$sql = "SELECT A.* 
+//							FROM {$_SESSION['DB_PREFIX']}diary A 
+//							WHERE clientid = $clientid
+//							AND starttime >= '$date' 
+//							AND endtime <= '$date 23:59:59'";
+//					$itemresult = mysql_query($sql);
+//					
+//					//Check whether the query was successful or not
+//					if($itemresult) {
+//						while (($itemmember = mysql_fetch_assoc($itemresult))) {
+//							$found = true;
+//						}
+//						
+//					} else {
+//						logError($sql . " - " . mysql_error());
+//					}
 				
 					if (! $found) {
 						$sql = "SELECT A.* 
 								FROM {$_SESSION['DB_PREFIX']}clientschedule A 
 								WHERE A.clientid = $clientid
-								AND A.weekday = $weekday ";
+								AND A.weekday = $weekday 
+								AND A.id NOT IN 
+							   	(
+							   		SELECT B.scheduleid FROM {$_SESSION['DB_PREFIX']}diary B
+							    	WHERE B.starttime >= '$date 00:00:00' 
+									AND B.endtime <= '$date 23:59:59'
+							    )";
 						$itemresult = mysql_query($sql);
 						
 						//Check whether the query was successful or not
@@ -157,8 +161,8 @@
 					AND C.member_id != 1
 					WHERE A.deleted = 'N'
 					AND A.clientid = $clientid
-					AND A.starttime < '$enddate' 
-					AND A.endtime >= '$startdate'
+					AND A.starttime < '$enddate 23:59:59' 
+					AND A.endtime >= '$startdate 00:00:00'
 					ORDER BY A.starttime";
 			$found = false;
 			$itemresult = mysql_query($sql);
@@ -168,19 +172,16 @@
 				while (($itemmember = mysql_fetch_assoc($itemresult))) {
 					if ($itemmember['status'] == "U") {
 						$color = "yellow";
-						$sdate = $itemmember['starttime'];
-						$edate = $itemmember['endtime'];
 						
 					} else if ($itemmember['status'] == "I") {
-						$sdate = $itemmember['actualstarttime'];
-						$edate = $itemmember['endtime'];
 						$color = "red";
 						
 					} else {
 						$color = "green";
-						$sdate = $itemmember['actualstarttime'];
-						$edate = $itemmember['actualendtime'];
 					}
+					
+					$sdate = $itemmember['starttime'];
+					$edate = $itemmember['endtime'];
 					
 					$weekday = date("w", strtotime($sdate));
 					$key = $itemmember['memberid'] . "_" . $weekday;

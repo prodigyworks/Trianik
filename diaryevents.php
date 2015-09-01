@@ -31,7 +31,7 @@
 	$crud->postDataRefreshEvent = "loadComplete";
 	$crud->title = "Diary";
 	$crud->table = "{$_SESSION['DB_PREFIX']}diary";
-	$crud->dialogwidth = 900;
+	$crud->dialogwidth = 450;
 	$crud->sql = 
 			"SELECT A.*, B.fullname, C.name
 			 FROM {$_SESSION['DB_PREFIX']}diary A 
@@ -39,7 +39,7 @@
 			 ON B.member_id = A.memberid 
 			 LEFT OUTER	 JOIN {$_SESSION['DB_PREFIX']}client C 
 			 ON C.id = A.clientid 
-			 ORDER BY A.status, A.starttime DESC";
+			 ORDER BY A.starttime DESC, A.status";
 	
 	$crud->columns = array(
 			array(
@@ -114,6 +114,22 @@
 						array(
 							'value'		=> 'C',
 							'text'		=> 'Clocked Out'
+						)
+					)
+			),
+			array(
+				'name'       => 'deleted',
+				'length' 	 => 10,
+				'label' 	 => 'Deleted',
+				'type'       => 'COMBO',
+				'options'    => array(
+						array(
+							'value'		=> 'Y',
+							'text'		=> 'Yes'
+						),
+						array(
+							'value'		=> 'N',
+							'text'		=> 'No'
 						)
 					)
 			)

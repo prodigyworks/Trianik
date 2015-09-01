@@ -10,6 +10,14 @@
 			height:19px;
 		}
 	</style>
+<?php 
+	if (isUserInRole("ADMIN")) {
+?>
+		<label>Staff Member</label>
+<?php 		
+		createUserCombo("memberid");
+	}
+?>
 	<table width='100%' cellspacing=5>
 		<thead>
 			<tr>
@@ -21,12 +29,16 @@
 			</tr>
 		</thead>
 <?php 
-	$memberid = getLoggedOnMemberID();
+	if (isset($_GET['id'])) {
+		$memberid = $_GET['id'];
+		
+	} else {
+		$memberid = getLoggedOnMemberID();
+	}
 	$date = date("Y-m-d");
 	$enddate = date ("Y-m-d", strtotime("+7 day", strtotime($date)));
 	
 	while (strtotime($date) < strtotime($enddate)) {
-		$date = date ("Y-m-d", strtotime("+1 day", strtotime($date)));
 		$showdate = date ("D d M Y", strtotime($date));
 		
 		echo "<tr>";
@@ -103,10 +115,29 @@
         echo "<hr />";
 		echo "</td>";
 		echo "</tr>";
+		
+		$date = date ("Y-m-d", strtotime("+1 day", strtotime($date)));
 	}
 ?>
 	</table>
 	<script>
+		$(document).ready(
+				function() {
+<?php 
+	if (isset($_GET['id'])) {
+?>
+					$("#memberid").val("<?php echo $_GET['id']; ?>");
+<?php 
+	}
+?>
+					$("#memberid").change(
+							function() {
+								window.location.href = "myplanner.php?id=" + $(this).val();
+							}
+						);
+				}
+			);
+		
 		function clockIn(id) {
 			callAjax(
 					"checkin.php", 

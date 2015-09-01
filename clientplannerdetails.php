@@ -165,7 +165,7 @@
 		
 		function modSchedHeight(){
 			var sch = document.getElementById("scheduler_here");
-			sch.style.height = "600px";
+			sch.style.height = "1200px";
 			sch.style.width = "960px";
 			var contbox = document.getElementById("contbox");
 //			contbox.style.width = "100px";
