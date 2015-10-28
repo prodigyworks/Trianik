@@ -60,7 +60,7 @@
 			background-color: red;
 		}
 		.green {
-			background-color: green;
+			background-color: #55FF55;
 		}
 		.one_line{
 			white-space:nowrap;
@@ -343,7 +343,6 @@
 	</div>
 	<div id="editdialog" class="modal">
 		<input type="hidden" id="eventid" />
-		<input type="hidden" id="status" />
 		<table>
 			<tr>
 				<td>
@@ -383,6 +382,18 @@
 				</td>
 				<td>
 					<input class="timepicker" type="text" id="endtime"  />
+				</td>
+			</tr>
+			<tr>
+				<td>
+					Status
+				</td>
+				<td>
+				    <SELECT id="status" name="status">
+				        <OPTION value="U">Scheduled</OPTION>
+				        <OPTION value="I">Started</OPTION>
+				        <OPTION value="C">Completed</OPTION>
+				    </SELECT>
 				</td>
 			</tr>
 		</table>

@@ -299,10 +299,10 @@ function smtpmailer($to, $from, $from_name, $subject, $body, $attachments = arra
 		}
 	
 	} catch (phpmailerException $e) {
-		logError($e->errorMessage(), false);
+		logError($e->errorMessage() . " for $to Subject $subject", false);
 			
 	} catch (Exception $e) {
-		logError($e->getMessage(), false);
+		logError($e->errorMessage() . " for $to Subject $subject", false);
 	}
 }
 
@@ -722,7 +722,7 @@ function redirectWithoutRole($role, $location) {
 }
 
 function getEmailHeader() {
-	return "<img src='" . getSiteConfigData()->domainurl . "/images/SmallLogo.png' />";
+	return "<img src='" . getSiteConfigData()->domainurl . "/images/logomain2.png' />";
 }
 
 function getEmailFooter() {

@@ -12,7 +12,7 @@
 	<style type="text/css" media="print">
 		.entry {
 			display: block;
-			font-size:9px;
+			font-size:6px;
 		}
 		#scheduler_here {
 			text-align: left ! important;
@@ -59,7 +59,7 @@
 		}
 		
 		.dhx_cal_event_line  {
-			font-size:11px;
+			font-size:9px;
 			line-height:12px;
 		}
 	</style>
@@ -165,8 +165,8 @@
 		
 		function modSchedHeight(){
 			var sch = document.getElementById("scheduler_here");
-			sch.style.height = "1200px";
-			sch.style.width = "960px";
+			sch.style.height = "960px";
+			sch.style.width = "1200px";
 			var contbox = document.getElementById("contbox");
 //			contbox.style.width = "100px";
 		}

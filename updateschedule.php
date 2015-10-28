@@ -37,12 +37,14 @@
 				starttime = '$startdate', 
 				endtime = '$enddate', 
 				memberid = $memberid,
+				status = '$status',
 				clientid = $clientid
 				WHERE id = $id";
 
 	} else if ($status == "I") {
 		$sql = "UPDATE {$_SESSION['DB_PREFIX']}diary SET 
 				actualstarttime = '$startdate', 
+				status = '$status',
 				endtime = '$enddate', 
 				memberid = $memberid,
 				clientid = $clientid
@@ -52,6 +54,7 @@
 		$sql = "UPDATE {$_SESSION['DB_PREFIX']}diary SET 
 				actualstarttime = '$startdate', 
 				actualendtime = '$enddate', 
+				status = '$status',
 				memberid = $memberid,
 				clientid = $clientid
 				WHERE id = $id";

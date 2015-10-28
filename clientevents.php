@@ -41,10 +41,11 @@
 			if ($sectionid != null) {
 				$clientid = $member['id'];
 				$date = $startdate;
+				$clientname = $member['name'];
 				
-				if (strtotime($date) < strtotime(date("Y-m-d"))) {
-					$date = date("Y-m-d");
-				}
+//				if (strtotime($date) < strtotime(date("Y-m-d"))) {
+//					$date = date("Y-m-d");
+//				}
 				
 				while (strtotime($date) < strtotime($enddate)) {
 					$weekday = date("w", strtotime($date));
@@ -72,14 +73,16 @@
 								FROM {$_SESSION['DB_PREFIX']}clientschedule A 
 								WHERE A.clientid = $clientid
 								AND A.weekday = $weekday 
+								AND begindate <= '$date'
+								AND (canceldate >= '$date' OR canceldate IS NULL OR canceldate = '0000-00-00' OR canceldate = '')
 								AND A.id NOT IN 
 							   	(
-							   		SELECT B.scheduleid FROM {$_SESSION['DB_PREFIX']}diary B
+							   		SELECT IFNULL(B.scheduleid, 0) FROM {$_SESSION['DB_PREFIX']}diary B
 							    	WHERE B.starttime >= '$date 00:00:00' 
 									AND B.endtime <= '$date 23:59:59'
 							    )";
 						$itemresult = mysql_query($sql);
-						
+
 						//Check whether the query was successful or not
 						if ($itemresult) {
 							while (($itemmember = mysql_fetch_assoc($itemresult))) {
@@ -117,7 +120,7 @@
 										$addToDiary = true;
 									}
 								}
-								
+
 								if ($addToDiary) {
 									$starttime = $date . " " . $itemmember['starttime'];
 									$endtime = $date . " " . $itemmember['endtime'];
@@ -177,7 +180,7 @@
 						$color = "red";
 						
 					} else {
-						$color = "green";
+						$color = "#55FF55";
 					}
 					
 					$sdate = $itemmember['starttime'];
@@ -288,8 +291,8 @@
 								"color" => "blue",
 								"textColor" => "white",
 								"start_date" => "$sdate 00:00:00",
-								"end_date" => "$edate 23:59:59",
-								"true_start_date" => "$date 00:00:00",
+								"end_date" => "$sdate 23:59:59",
+								"true_start_date" => "$sdate 00:00:00",
 								"text" => "Holiday",
 								"section_id" => $member['memberid']
 							)
@@ -317,7 +320,7 @@
 								"textColor" => "white",
 								"start_date" => "$sdate 00:00:00",
 								"end_date" => "$edate 23:59:59",
-								"true_start_date" => "$date 00:00:00",
+								"true_start_date" => "$sdate 00:00:00",
 								"text" => $member['absencetype'],
 								"section_id" => $member['memberid']
 							)

@@ -38,13 +38,14 @@
 			$this->AddPage();
 			
 			try {
-				$sql = "SELECT SUM((endtime - starttime) / 1000) AS hours,  B.name AS customername
+				$sql = "SELECT SUM(TIMESTAMPDIFF(MINUTE, starttime, endtime)) AS hours,  B.name AS customername
 						FROM {$_SESSION['DB_PREFIX']}diary A 
 						INNER JOIN {$_SESSION['DB_PREFIX']}client B 
 						ON B.id = A.clientid 
 						WHERE A.status IN ('I', 'C')
 						AND YEAR(A.starttime) = $year
 						AND MONTH(A.starttime) = $month
+						AND A.deleted != 'Y'
 						GROUP BY B.name
 						ORDER BY B.name";
 				$result = mysql_query($sql);
@@ -53,8 +54,12 @@
 					while (($member = mysql_fetch_assoc($result))) {
 						$line=array(
 								"Customer"  => $member['customername'],
-								"Hours Worked"  => number_format($member['hours'], 2)
+								"Hours Worked"  => number_format($member['hours'] / 60, 2)
 							);
+							
+						if ($this->GetY() > 265) {
+							$this->AddPage();
+						}
 							
 						$this->addLine( $this->GetY(), $line );
 					}

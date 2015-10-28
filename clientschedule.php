@@ -3,6 +3,11 @@
 	
 	class ClientCrud extends Crud {
 		public $clientid;
+		public $weekday;
+		public $enddate;
+		public $staffid;
+		public $starttime;
+		public $endtime;
 		
 		private function getWeekDay($weekday) {
 			if ($weekday == 0) return "Sunday";
@@ -14,6 +19,23 @@
 			if ($weekday == 6) return "Saturday";
 			
 			return "N/A";
+		}
+		
+		public function preUpdateEvent($id) {
+			$sql = "SELECT *
+					FROM {$_SESSION['DB_PREFIX']}clientschedule A
+					WHERE id = $id";
+			$result = mysql_query($sql);
+
+			if ($result) {
+				while (($member = mysql_fetch_assoc($result))) {
+					$this->staffid = $member['memberid'];
+					$this->enddate = $member['canceldate'];
+					$this->weekday = $member['weekday'];
+					$this->starttime = $member['starttime'];
+					$this->endtime = $member['endtime'];
+				}
+			}
 		}
 		
 		public function postInsertEvent() {
@@ -32,20 +54,82 @@
 
 			if ($result) {
 				while (($member = mysql_fetch_assoc($result))) {
-					$clientname = $member['clientname'];
-					$lines = "Shift allocated to you on " . $this->getWeekDay($_POST['weekday']) . " " . $_POST['starttime'] . "-" . $_POST['endtime'] . " for $clientname\n";
 					$memberid = $_POST['memberid'];
+					$enddate = convertStringToDate($_POST['canceldate']);
+					
+					if ($enddate == "") {
+						$enddate = "0000-00-00";
+					}
+					
+					if ($this->weekday != $_POST['weekday'] ||
+						$this->staffid != $_POST['memberid']) {
+							
+//						logError("WEEK DAY OR STAFF CHANGED", false);
+							
+						$clientname = $member['clientname'];
+						$lines = "Shift allocated to you on " . $this->getWeekDay($_POST['weekday']) . " " . $_POST['starttime'] . "-" . $_POST['endtime'] . " for $clientname\n";
+		    			
+		    			sendUserMessage($memberid, "Work Allocation", $lines);
+					}
 	    			
-	    			sendUserMessage($memberid, "Work Allocation", $lines);
-	    			
-	    			$sql = "DELETE FROM {$_SESSION['DB_PREFIX']}diary 
-	    					WHERE scheduleid = $id
-	    					AND status = 'U'";
-	    			$itemresult = mysql_query($sql);
-	    			
-	    			if (! $itemresult) {
-	    				logError($sql . " - " . mysql_error());
-	    			}
+					if ($this->weekday != $_POST['weekday']) {
+//						logError("WEEK DAY CHANGED", false);
+						$sql = "DELETE FROM {$_SESSION['DB_PREFIX']}diary 
+		    					WHERE scheduleid = $id
+		    					AND status = 'U'
+		    					AND deleted != 'Y'";
+		    			$itemresult = mysql_query($sql);
+		    			
+		    			if (! $itemresult) {
+		    				logError($sql . " - " . mysql_error());
+		    			}
+		    			
+					} else if ($this->staffid != $_POST['memberid']) {
+//						logError("STAFF CHANGED", false);
+						$sql = "UPDATE {$_SESSION['DB_PREFIX']}diary 
+								SET memberid = $memberid
+		    					WHERE scheduleid = $id
+		    					AND status = 'U'
+		    					AND deleted != 'Y'";
+		    			$itemresult = mysql_query($sql);
+		    			
+		    			if (! $itemresult) {
+		    				logError($sql . " - " . mysql_error());
+		    			}
+					}
+					
+					
+					if ($this->enddate != $enddate) {
+//						logError("END DATE CHANGED: $enddate" . " - " . $this->enddate, false);
+						$sql = "DELETE FROM {$_SESSION['DB_PREFIX']}diary 
+		    					WHERE scheduleid = $id
+		    					AND starttime > '$enddate'
+		    					AND status = 'U'
+		    					AND deleted != 'Y'";
+		    			$itemresult = mysql_query($sql);
+		    			
+		    			if (! $itemresult) {
+		    				logError($sql . " - " . mysql_error());
+		    			}
+					}
+					
+					if ($this->starttime != $_POST['starttime'] || $this->endtime != $_POST['endtime']) {
+					    $starttime = $_POST['starttime'];
+					    $endtime = $_POST['endtime'];
+//						logError("STAFF CHANGED", false);
+						$sql = "UPDATE {$_SESSION['DB_PREFIX']}diary 
+								SET starttime = '$starttime',
+								endtime = '$endtime'
+		    					WHERE scheduleid = $id
+		    					AND status = 'U'
+		    					AND deleted != 'Y'";
+		    			$itemresult = mysql_query($sql);
+		    			
+		    			if (! $itemresult) {
+		    				logError($sql . " - " . mysql_error());
+		    			}
+		    			
+					} 
 				}
 			}
 		}
@@ -53,6 +137,18 @@
 		/* Post script event. */
 		public function postScriptEvent() {
 ?>
+			function postDeleteScriptEvent(id) {
+				callAjax(
+						"scheduledelete.php", 
+						{ 
+							id: id
+						},
+						function(data) {
+						},
+						false
+					);				
+			}
+		
 			function mode_onchange() {
 				if ($("#begindate").val() != "") {
 					var parts = $("#begindate").val().split('/');
@@ -67,6 +163,7 @@
 	
 	$crud = new ClientCrud();
 	$crud->clientid = $_GET['id'];
+	$crud->postDeleteScriptEvent = "postDeleteScriptEvent";
 	$crud->title = "Client Schedule";
 	$crud->table = "{$_SESSION['DB_PREFIX']}clientschedule";
 	$crud->sql = "SELECT A.*, B.name, C.fullname
@@ -174,6 +271,13 @@
 				'onchange'	 => 'mode_onchange',
 				'length' 	 => 12,
 				'label' 	 => 'Start From'
+			),
+			array(
+				'name'       => 'canceldate',
+				'datatype'	 => 'date',
+				'required'	 => false,
+				'length' 	 => 12,
+				'label' 	 => 'End Date'
 			),
 			array(
 				'name'       => 'starttime',

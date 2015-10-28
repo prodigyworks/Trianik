@@ -3,6 +3,8 @@
 	
 	start_db();
 	
+	require_once("db-backup.php");
+	
    	sendRoleMessage("ALERT", "Daily alert task schedule", "Information: Alerts task schedule run at " . date("d/m/Y"));
     	
 	/********************************************************************* END OF SCHEDULE **************************************/
