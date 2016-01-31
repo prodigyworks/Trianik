@@ -66,7 +66,7 @@
 		$qry = $created;
 
 	} else {
-		$qry = "SELECT * FROM " . $table . " " . "WHERE $pkname = $id";
+		$qry = "SELECT * FROM " . $table . " " . "WHERE $pkname = '$id'";
 	}
 //			print_r($qry);
 	

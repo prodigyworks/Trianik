@@ -8,7 +8,7 @@
 		include("system-header.php"); 
 	}
 	
-	include("confirmdialog.php");
+	require_once("confirmdialog.php");
 	
 	function search() {
 		global $where;
@@ -30,6 +30,8 @@
 	}
 	
 	
+	createConfirmDialog("confirmdialog", "Delete document ?", "deleteDocumentFromDialog");
+	
 	if (isset($_GET['id']) || isset($_GET['sessionid'])) {
 ?>
 <div style='background-color: white'>
@@ -46,21 +48,31 @@
 	</div>
 </form>
 </div>
-<div id="documentcontainer">
 <?php
-	
-		createConfirmDialog("confirmdialog", "Delete document ?", "deleteDocumentFromDialog");
-		
-		if (isset($_GET['id'])) {
-		}
-		
+
 	} else {
 ?>
-</div>
 <div id="documentDiv">
+<div style='padding:10px'>
 	<label>SEARCH</label>
-	<input type="text" id="title" name="title" style="width:450px; " />
+	<input type="text" id="search" name="search" style="width:450px; " />
 	<button id="search" name="search" onclick='search()' style='display:inline'>Search</button>
+	<br>
+	<br>
+	<hr>
+
+</div>
+<form id="documentForm" name="documentForm" onsubmit="return validate()" enctype="multipart/form-data" method="POST" action="system-documentupload.php">
+	<div id="documentDiv">
+		<label>TITLE</label>
+		<input type="text" id="title" name="title" style="width:550px" /><br>
+		
+		<label>DOCUMENT</label>
+		<input type="file" id="document" name="document" style="width:750px" /><br>
+		<br>
+		<input type="submit" style="margin-left:0px" class="dataButton" value="ADD DOCUMENT" id="btnHeanerNotes" />
+		<br>
+</form>
 </div>
 <?php
 	}
@@ -120,13 +132,10 @@
 			} else {
 				$qry = "SELECT A.*, DATE_FORMAT(A.createddate, '%d/%m/%Y') AS createddate, " .
 						"DATE_FORMAT(A.lastmodifieddate, '%d/%m/%Y') AS lastmodifieddate, " .
-						"B.firstname, B.lastname," .
-						"C.prefix, C.id AS quoteid, C.status " .
+						"B.firstname, B.lastname " .
 						"FROM {$_SESSION['DB_PREFIX']}documents A " .
 						"INNER JOIN {$_SESSION['DB_PREFIX']}members B " .
 						"ON B.member_id = A.createdby " .
-						"INNER JOIN {$_SESSION['DB_PREFIX']}trainingcode C " .
-						"ON C.id = A.headerid " .
 						$where . " " .
 						"ORDER BY A.id";
 			}
@@ -160,6 +169,9 @@
 					echo "<td>" . $member['firstname'] . " " . $member['lastname'] . "</td>\n";
 					echo "</tr>\n";
 				}
+				
+			} else {
+			    logError($qry . " - " . mysql_error());
 			}
 		?>
 	</table>
@@ -172,7 +184,7 @@
 	}
 		
 	function search() {
-		call("search", {pk1: $("#title").val()});
+		call("search", {pk1: $("#search").val()});
 	}
 	
 	function deleteDocument(id) {

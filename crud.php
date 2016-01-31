@@ -1083,6 +1083,28 @@ class Crud  {
 		var pages = "<?php echo $this->pages; ?>";
 		var pageSize = <?php echo $this->pagesize; ?>;
 		
+		function verifyUniqueKey(keyName, keyValue) {
+			var retValue = true;
+
+			callAjax(
+					"finddatarow.php", 
+					{ 
+						id: keyValue,
+						pkname: keyName,
+						table: "<?php echo $this->table; ?>"
+					},
+					function(data) {
+						if (data.length > 0) {
+							pwAlert("Row aleady exists");
+							retValue = false;
+						}
+					},
+					false
+				);
+				
+			return retValue;
+		}
+		
 		function verifyCrudForm() {
 			<?php
 			if ($this->validateForm != null) {
@@ -1583,16 +1605,16 @@ class Crud  {
 				);
 			<?php
 			}
-
-			if ($this->preDeleteScriptEvent != null) {
-				echo "if (! ". $this->preDeleteScriptEvent . "(currentCrudID)) return;\n";
-			}
-			?>
 			
 			if (! correct) {
 				pwAlert("Row is currently in use. Cannot remove.");
 				return;
 			}
+			
+			if ($this->preDeleteScriptEvent != null) {
+				echo "if (! ". $this->preDeleteScriptEvent . "(currentCrudID)) return;\n";
+			}
+			?>
 			
 			callAjax(
 					"cruddelete.php", 
@@ -1602,7 +1624,8 @@ class Crud  {
 						id: currentCrudID
 					},
 					function(data) {
-					}
+					},
+					false
 				);
 <?php 
 			if ($this->postDeleteScriptEvent != null) {
@@ -1802,6 +1825,20 @@ class Crud  {
 									}
 									
 									tinyMCE.triggerSave();
+									
+									if ($("#crudcmd").val() == "insert") {
+<?php
+		for ($i = 0; $i < count($this->columns); $i++) {
+			if ($this->columns[$i]['unique'] == true) {
+?>				
+				if (! verifyUniqueKey("<?php echo $this->columns[$i]['name']; ?>", $("#<?php echo $this->columns[$i]['name']; ?>").val())) {
+					return;
+				}
+<?php				
+			}
+		}
+?>									
+									}
 									
 									$(this).dialog("close")
 									

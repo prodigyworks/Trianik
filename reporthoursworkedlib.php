@@ -11,7 +11,7 @@
 			$this->Image("images/logomain2.png", 173.6, 1);
 			
 			$size = $this->addText( 10, 13, "Hours Worked - Monthly", 12, 4, 'B') + 5;
-			$this->SetFont('Arial','', 6);
+			$this->SetFont('Arial','', 8);
 				
 			$cols = array( 
 					"Customer"  => 155,
@@ -25,7 +25,7 @@
 					"Hours Worked"  => "R"
 				);
 			$this->addLineFormat( $cols);
-			$this->SetY(30);
+			$this->SetY(29);
 		}
 		
 		function __construct($orientation, $metric, $size, $year, $month) {
@@ -57,11 +57,12 @@
 								"Hours Worked"  => number_format($member['hours'] / 60, 2)
 							);
 							
-						if ($this->GetY() > 265) {
+						if ($this->GetY() > 260) {
 							$this->AddPage();
 						}
 							
-						$this->addLine( $this->GetY(), $line );
+						$this->addLine( $this->GetY(), $line, 5.5);
+						$this->Line( 10, $this->GetY() - 0.5, 200, $this->GetY() - 0.5);
 					}
 					
 				} else {

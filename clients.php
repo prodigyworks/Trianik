@@ -41,6 +41,7 @@
 				'label' 	 => 'ID'
 			),
 			array(
+				'unique'	 => true,
 				'name'       => 'name',
 				'length' 	 => 30,
 				'label' 	 => 'Name'

@@ -62,6 +62,9 @@
 		.green {
 			background-color: #55FF55;
 		}
+		.orange {
+			background-color: orange;
+		}
 		.one_line{
 			white-space:nowrap;
 			overflow:hidden;
@@ -422,6 +425,12 @@
 				<td>Not Working</td>
 				<td>
 					<div class="keyblock grey">&nbsp;</div>
+				</td>
+			</tr>
+			<tr>
+				<td>Statutory Holiday</td>
+				<td>
+					<div class="keyblock orange">&nbsp;</div>
 				</td>
 			</tr>
 			<tr>

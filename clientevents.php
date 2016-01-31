@@ -291,10 +291,40 @@
 								"color" => "blue",
 								"textColor" => "white",
 								"start_date" => "$sdate 00:00:00",
-								"end_date" => "$sdate 23:59:59",
+								"end_date" => "$edate 23:59:59",
 								"true_start_date" => "$sdate 00:00:00",
 								"text" => "Holiday",
 								"section_id" => $member['memberid']
+							)
+					);
+			}
+		}
+		
+		
+		$sql = "SELECT A.*, B.member_id
+				FROM {$_SESSION['DB_PREFIX']}bankholiday A
+				INNER JOIN {$_SESSION['DB_PREFIX']}members B
+				WHERE startdate <= '$enddate' 
+				AND enddate >= '$startdate' ";
+		$result = mysql_query($sql);
+		
+		//Check whether the query was successful or not
+		if ($result) {
+			while (($member = mysql_fetch_assoc($result))) {
+				$sdate = $member['startdate'];
+				$edate = $member['enddate'];
+				
+				array_push(
+						$json, 
+						array(
+								"id" => "BANK" . $member['id'] . "-" . $member['member_id'],
+								"color" => "orange",
+								"textColor" => "black",
+								"start_date" => "$sdate 00:00:00",
+								"end_date" => "$edate 23:59:59",
+								"true_start_date" => "$sdate 00:00:00",
+								"text" => $member['name'],
+								"section_id" => $member['member_id']
 							)
 					);
 			}

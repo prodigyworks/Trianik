@@ -319,7 +319,7 @@
 						$this->addText( 50, 23, $frequency, 8, 3, '');
 						
 						$this->addText( 110, 23, "Start Date", 10, 4, '');
-						$this->addText( 150, 23, $member['startdate'], 8, 3, '');
+						$this->addText( 150, 23, $member['startdate'] == "00/00/0000" ? "N/A" : $member['startdate'], 8, 3, '');
 						
 						$this->addText( 10, 31, "Hours Required", 10, 4, '');
 						$this->addText( 50, 31, $member['hoursrequired'], 8, 3, '');
@@ -343,7 +343,7 @@
 						$this->addText( 50, 67, $member['ironingrequired'] == "Y" ? "Yes" : "No", 8, 3, '');
 												
 						$this->addText( 10, 74, "Specific Cleaning Requirements", 10, 4, '', 32);
-						$this->addText( 50, 74, $member['specificrequirements'], 8, 3, '');
+						$this->addText( 50, 74, $member['specificrequirements'], 8, 3, '', 153);
 					}
 					
 				} else {

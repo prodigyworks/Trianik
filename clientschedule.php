@@ -137,11 +137,43 @@
 		/* Post script event. */
 		public function postScriptEvent() {
 ?>
+			var cleanerID = 0;
+			var cleanerName = ""
+			var cleanerTime = "";
+			
+			function preDeleteScriptEvent(id) {
+				callAjax(
+					"finddata.php", 
+					{ 
+						sql: "SELECT A.memberid, A.weekday, B.name " +
+							 "FROM <?php echo $_SESSION['DB_PREFIX'];?>clientschedule A " + 
+							 "INNER JOIN <?php echo $_SESSION['DB_PREFIX'];?>client B " + 
+							 "ON B.id = A.clientid " + 
+							 "WHERE A.id = " + id
+					},
+					function(data) {
+						if (data.length > 0) {
+							cleanerID = data[0].memberid;
+							cleanerTime = data[0].weekday;
+							cleanerName = data[0].name;
+
+						} else {
+							cleanerID = 0;
+						}
+					}
+				);	
+				
+				return true;			
+			}
+			
 			function postDeleteScriptEvent(id) {
 				callAjax(
 						"scheduledelete.php", 
 						{ 
-							id: id
+							id: id,
+							cleanerid: cleanerID,
+							clientname: cleanerName,
+							weekday: cleanerTime
 						},
 						function(data) {
 						},
@@ -163,6 +195,7 @@
 	
 	$crud = new ClientCrud();
 	$crud->clientid = $_GET['id'];
+	$crud->preDeleteScriptEvent = "preDeleteScriptEvent";
 	$crud->postDeleteScriptEvent = "postDeleteScriptEvent";
 	$crud->title = "Client Schedule";
 	$crud->table = "{$_SESSION['DB_PREFIX']}clientschedule";
