@@ -42,6 +42,8 @@
 						FROM {$_SESSION['DB_PREFIX']}diary A 
 						INNER JOIN {$_SESSION['DB_PREFIX']}client B 
 						ON B.id = A.clientid 
+						INNER JOIN {$_SESSION['DB_PREFIX']}members C
+						ON C.member_id = A.memberid
 						WHERE A.status IN ('I', 'C')
 						AND YEAR(A.starttime) = $year
 						AND MONTH(A.starttime) = $month
@@ -49,6 +51,7 @@
 						GROUP BY B.name
 						ORDER BY B.name";
 				$result = mysql_query($sql);
+				$total = 0;
 				
 				if ($result) {
 					while (($member = mysql_fetch_assoc($result))) {
@@ -56,6 +59,8 @@
 								"Customer"  => $member['customername'],
 								"Hours Worked"  => number_format($member['hours'] / 60, 2)
 							);
+							
+						$total += floatval(number_format($member['hours'] / 60, 2));
 							
 						if ($this->GetY() > 260) {
 							$this->AddPage();
@@ -68,6 +73,13 @@
 				} else {
 					logError($sql . " - " . mysql_error());
 				}
+				
+				$this->addLine( 262, array(
+								"Customer"  => "Total hours worked : ",
+								"Hours Worked"  => number_format($total, 2)
+							), 5.5);
+							
+				$this->Line( 10, 261.5, 200, 261.5);
 				
 			} catch (Exception $e) {
 				logError($e->getMessage());

@@ -129,6 +129,9 @@
 									
 									$("#editdialog").dialog("close");
 								},
+<?php 
+	if (isUserInRole("ADMIN")) {
+?>
 								"Remove": function() {
 									callAjax(
 											"removeschedule.php", 
@@ -145,6 +148,9 @@
 									
 									$("#editdialog").dialog("close");
 								},
+<?php 
+	}
+?>
 								Cancel: function() {
 									$("#editdialog").dialog("close");
 								}

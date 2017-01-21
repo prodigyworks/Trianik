@@ -36,7 +36,8 @@
 
 						$this->SetFillColor(100, 255, 100);
 						$this->Rect(5.3, 21.3, 42.6, 7, "F");
-						$this->Rect(106.3, 21.3, 31.6, 6.5, "F");
+						$this->Rect(86.3, 21.3, 31.6, 6.5, "F");
+						$this->Rect(148.3, 21.3, 22.6, 7, "F");
 						$this->Rect(5.3, 55.3, 42.6, 25.4, "F");
 						$this->Rect(5.3, 88.3, 42.6, 7, "F");
 						$this->Rect(5.3, 105.3, 42.6, 10.6, "F");
@@ -52,8 +53,10 @@
 						$this->Rect(5.3, 184.4, 42.6, 22, "F");
 						$this->Rect(5.3, 258.4, 42.6, 21.2, "F");
 						
-						$this->Line(106, 21, 106, 28);
-						$this->Line(138, 21, 138, 28);
+						$this->Line(86, 21, 86, 28);
+						$this->Line(118, 21, 118, 28);
+						$this->Line(148, 21, 148, 28);
+						$this->Line(171, 21, 171, 28);
 						$this->Line(106, 81, 106, 88);
 						$this->Line(138, 81, 138, 88);
 						
@@ -144,8 +147,10 @@
 						
 						$this->addText( 10, 23, "Name of Organisation", 10, 4, '');
 						$this->addText( 50, 23, $member['name'], 10, 4, '');
-						$this->addText( 110, 23, "Contact Name", 10, 4, '');
-						$this->addText( 140, 23, $member['firstname'] . " " . $member['lastname'], 10, 4, '');
+						$this->addText( 90, 23, "Contact Name", 10, 4, '');
+						$this->addText( 120, 23, $member['firstname'] . " " . $member['lastname'], 10, 4, '');
+						$this->addText( 150, 23, "Key Codes", 10, 4, '');
+						$this->addText( 173, 23, $member['keycodes'], 10, 4, '');
 						
 						$this->addText( 10, 38, "Address", 10, 4, '');
 						$this->addText( 50, 30, $member['address'], 10, 4, '');
@@ -296,6 +301,7 @@
 						$this->Line(5, 58, 205, 58);
 						$this->Line(5, 66, 205, 66);
 						$this->Line(5, 73, 205, 73);
+						$this->Line(5, 100, 205, 100);
 						$this->Line(106.3, 20.9, 106.3, 44);
 						$this->Line(147.9, 20.9, 147.9, 44);
 						
@@ -341,9 +347,12 @@
 						
 						$this->addText( 10, 67, "Ironing required", 10, 4, '', 30);
 						$this->addText( 50, 67, $member['ironingrequired'] == "Y" ? "Yes" : "No", 8, 3, '');
-												
-						$this->addText( 10, 74, "Specific Cleaning Requirements", 10, 4, '', 32);
-						$this->addText( 50, 74, $member['specificrequirements'], 8, 3, '', 153);
+						
+						$this->addText( 10, 74, "Health & Safety / Risk Assessment", 10, 4, '', 29);
+						$this->addText( 50, 74, $member['healthsafetyriskassessment'], 10, 4, '');
+						
+						$this->addText( 10, 101, "Specific Cleaning Requirements", 10, 4, '', 32);
+						$this->addText( 50, 101, $member['specificrequirements'], 8, 3, '', 153);
 					}
 					
 				} else {

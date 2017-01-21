@@ -267,6 +267,12 @@
 				'label' 	 => 'Alarm Codes'
 			),
 			array(
+				'name'       => 'keycodes',
+				'length' 	 => 20,
+				'required' 	 => false,
+				'label' 	 => 'Key Codes'
+			),
+			array(
 				'name'       => 'accessinstructions',
 				'length' 	 => 60,
 				'required' 	 => false,
@@ -279,6 +285,14 @@
 				'type'		 => 'BASICTEXTAREA',
 				'required' 	 => false,
 				'label' 	 => 'Specific Requirements'
+			),
+			array(
+				'name'       => 'healthsafetyriskassessment',
+				'length' 	 => 12,
+				'showInView' => false,
+				'type'		 => 'BASICTEXTAREA',
+				'required' 	 => false,
+				'label' 	 => 'Health & Safety / Risk Assessment'
 			)
 		);
 
