@@ -141,7 +141,7 @@
 	    
 	    		$sql = "SELECT *
 			    		FROM {$_SESSION['DB_PREFIX']}applicationactionroles
-			    		WHERE actionid = {$this->id}";
+			    		WHERE actionid = ?";
 		    
 	    		/* Prepare delete statement. */
 	    		$stmt = SessionControllerClass::getDB()->prepare($sql);
