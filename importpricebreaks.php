@@ -31,10 +31,10 @@
 		        $num = count($data);
 		        $index = 0;
 		        
-		        $productcode = trim(mysql_escape_string($data[$index++]));
-		        $priceeach = str_replace(",", "", mysql_escape_string($data[$index++]));
-		        $qtyfrom = str_replace(",", "", mysql_escape_string($data[$index++]));
-		        $qtyto = str_replace(",", "", mysql_escape_string($data[$index++]));
+		        $productcode = trim(trim($data[$index++]));
+		        $priceeach = str_replace(",", "", trim($data[$index++]));
+		        $qtyfrom = str_replace(",", "", trim($data[$index++]));
+		        $qtyto = str_replace(",", "", trim($data[$index++]));
 		        $productid = 0;
 		        		        
 		        if ($data[0] != "") {

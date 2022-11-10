@@ -58,8 +58,8 @@
 							VALUES
 							(
 								$primaryid, {$document->getId()}, NOW(),
-								NOW(), $memberid,
-								NOW(), $memberid
+								NOW(), ?,
+								NOW(), ?
 							)";
 		
 					$itemstmt = SessionControllerClass::getDB()->prepare($sql);
@@ -73,8 +73,8 @@
 				$sql = "UPDATE {$_SESSION['DB_PREFIX']}documents SET
 						sessionid = NULL,
 						metamodifieddate = NOW(),
-						metamodifieduserid = $memberid
-						WHERE sessionid = '$sessionid'";
+						metamodifieduserid = ?
+						WHERE sessionid = ?";
 				
 				$itemstmt = SessionControllerClass::getDB()->prepare($sql);
 				$itemstmt->bindValue(1, $memberid, PDO::PARAM_INT);

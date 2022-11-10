@@ -30,11 +30,11 @@
 	$opponentids = (isset($_POST['opponentids']) && $_POST['opponentids'] == "on") ? 1 : 0; 
 	$refappointedbyleague = $_POST['refappointedbyleague']; 
 	$refereeid = $_POST['refereeid']; 
-	$referee = mysql_escape_string($_POST['refereeid_lazy']); 
-	$division= mysql_escape_string($_POST['division']); 
+	$referee = trim($_POST['refereeid_lazy']); 
+	$division= trim($_POST['division']); 
 	$refereescore = $_POST['refereescore']; 
-	$remarks = mysql_escape_string($_POST['remarks']); 
-	$refereeremarks = mysql_escape_string($_POST['refereeremarks']); 
+	$remarks = trim($_POST['remarks']); 
+	$refereeremarks = trim($_POST['refereeremarks']); 
 	$teamid = getLoggedOnTeamID();
 	$memberid = getLoggedOnMemberID();
 	
@@ -93,7 +93,7 @@
 		$imgstring = ob_get_contents(); 
         ob_end_clean();
 		
-		$escimgstring = mysql_escape_string($imgstring);
+		$escimgstring = trim($imgstring);
 		$id = $_POST['signatureid'];
 		
 		$qry = "INSERT INTO {$_SESSION['DB_PREFIX']}images " .

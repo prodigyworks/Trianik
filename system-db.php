@@ -139,7 +139,7 @@ function GetSQLValueString($theValue, $theType, $theDefinedValue = "", $theNotDe
 { 
   $theValue = get_magic_quotes_gpc() ? stripslashes($theValue) : $theValue; 
  
-  $theValue = function_exists("mysql_real_escape_string") ? mysql_real_escape_string($theValue) : mysql_escape_string($theValue); 
+  $theValue = function_exists("mysql_real_escape_string") ? mysql_real_escape_string($theValue) : trim($theValue); 
  
   switch ($theType) { 
     case "text": 
@@ -171,7 +171,7 @@ function dateStampString($oldnotes, $newnotes, $prefix = "") {
 	}
 	
 	return 
-		mysql_escape_string (
+		trim (
 				$oldnotes . "\n\n" .
 				$prefix . " - " . 
 				date("F j, Y, g:i a") . " : " . 
@@ -318,8 +318,8 @@ function sendRoleMessage($role, $subject, $message, $attachments = array()) {
 		while (($member = mysql_fetch_assoc($result))) {
 			smtpmailer($member['email'], 'info@tclplanner.co.uk', 'Trianik Planning System', $subject, getEmailHeader() . "<h4>Dear " . $member['firstname'] . ",</h4><p>" . $message . "</p>" . getEmailFooter(), $attachments);
 			
-			$subject = mysql_escape_string($subject);
-			$message = mysql_escape_string($message);
+			$subject = trim($subject);
+			$message = trim($message);
 			
 			sendMessage($subject, $message, $member['member_id']);
 		}
@@ -395,8 +395,8 @@ function sendInternalRoleMessage($role, $subject, $message, $attachments = array
 		while (($member = mysql_fetch_assoc($result))) {
 			smtpmailer($member['email'], $from, $fromName, $subject, getEmailHeader() . "<h4>Dear " . $member['firstname'] . ",</h4><p>" . $message . "</p>" . getEmailFooter(), $attachments);
 			
-			$subject = mysql_escape_string($subject);
-			$message = mysql_escape_string($message);
+			$subject = trim($subject);
+			$message = trim($message);
 			
 			sendMessage($subject, $message, $member['member_id']);
 		}
@@ -420,8 +420,8 @@ function sendTeamMessage($id, $subject, $message, $footer = "", $attachments = a
 		while (($member = mysql_fetch_assoc($result))) {
 			smtpmailer($member['email'], 'confirmation@tclplanner.co.uk', 'Trianik Planning System', $subject, getEmailHeader() . "<h4>Dear " . $member['firstname'] . ",</h4><p>" . $message . "</p>" . getEmailFooter(). $footer, $attachments);
 			
-			$subject = mysql_escape_string($subject);
-			$message = mysql_escape_string($message);
+			$subject = trim($subject);
+			$message = trim($message);
 			
 			sendMessage($subject, $message, $id);
 		}
@@ -453,8 +453,8 @@ function sendUserMessage($id, $subject, $message, $footer = "", $attachments = a
 		while (($member = mysql_fetch_assoc($result))) {
 			smtpmailer($member['email'], 'info@tclplanner.co.uk', 'Trianik Planning System', $subject, getEmailHeader() . "<h4>Dear " . $member['firstname'] . ",</h4><p>" . $message . "</p>" . getEmailFooter(). $footer, $attachments);
 				
-			$subject = mysql_escape_string($subject);
-			$message = mysql_escape_string($message);
+			$subject = trim($subject);
+			$message = trim($message);
 				
 			sendMessage($subject, $message, $id, $action);
 		}
@@ -505,8 +505,8 @@ function sendInternalUserMessage($id, $subject, $message, $footer = "", $attachm
 		while (($member = mysql_fetch_assoc($result))) {
 			smtpmailer($member['email'], $from, $fromName, $subject, getEmailHeader() . "<h4>Dear " . $member['firstname'] . ",</h4><p>" . $message . "</p>" . getEmailFooter(). $footer, $attachments);
 			
-			$subject = mysql_escape_string($subject);
-			$message = mysql_escape_string($message);
+			$subject = trim($subject);
+			$message = trim($message);
 			
 			sendMessage($subject, $message, $id, $action);
 		}
@@ -820,7 +820,7 @@ function logError($description, $kill = true) {
 		$pageid = 1;
 	}
 	
-	$qry = "INSERT INTO {$_SESSION['DB_PREFIX']}errors (pageid, memberid, description, metacreateddate, metacreateduserid, metamodifieddate, metamodifieduserid) VALUES ($pageid, " . getLoggedOnMemberID() . ", '" . mysql_escape_string($description) . "', NOW(), " . getLoggedOnMemberID() . ", NOW(), " .  getLoggedOnMemberID() . ")";
+	$qry = "INSERT INTO {$_SESSION['DB_PREFIX']}errors (pageid, memberid, description, metacreateddate, metacreateduserid, metamodifieddate, metamodifieduserid) VALUES ($pageid, " . getLoggedOnMemberID() . ", '" . trim($description) . "', NOW(), " . getLoggedOnMemberID() . ", NOW(), " .  getLoggedOnMemberID() . ")";
 	$result = mysql_query($qry);
 	
 	if ($kill) {

@@ -353,13 +353,13 @@
 					if (isset($_POST['opponentids'])) echo "$('#opponentids_" . $_POST['opponentids'] . "').attr('checked', true);\n";
 					if (isset($_POST['requiredbarriers'])) echo "$('#requiredbarriers_" . $_POST['requiredbarriers'] . "').attr('checked', true);\n";
 					
-					if (isset($_POST['remarks'])) echo "$('#remarks').val('" . mysql_escape_string($_POST['remarks']) . "');\n";
-					if (isset($_POST['refereeid'])) echo "$('#refereeid').val('" . mysql_escape_string($_POST['refereeid']) . "');\n";
-					if (isset($_POST['refereeid_lazy'])) echo "$('#refereeid_lazy').val('" . mysql_escape_string($_POST['refereeid_lazy']) . "');\n";
+					if (isset($_POST['remarks'])) echo "$('#remarks').val('" . trim($_POST['remarks']) . "');\n";
+					if (isset($_POST['refereeid'])) echo "$('#refereeid').val('" . trim($_POST['refereeid']) . "');\n";
+					if (isset($_POST['refereeid_lazy'])) echo "$('#refereeid_lazy').val('" . trim($_POST['refereeid_lazy']) . "');\n";
 					
-					if (isset($_POST['signatureid'])) echo "$('#signatureid').val('" . mysql_escape_string($_POST['signatureid']) . "');\n";
-					if (isset($_POST['name'])) echo "$('#name').val('" . mysql_escape_string($_POST['name']) . "');\n";
-					if (isset($_POST['output'])) echo "$('#output').val('" . mysql_escape_string($_POST['output']) . "');\n";
+					if (isset($_POST['signatureid'])) echo "$('#signatureid').val('" . trim($_POST['signatureid']) . "');\n";
+					if (isset($_POST['name'])) echo "$('#name').val('" . trim($_POST['name']) . "');\n";
+					if (isset($_POST['output'])) echo "$('#output').val('" . trim($_POST['output']) . "');\n";
 ?>
 					
 			      	$('.sigPad').signaturePad(

@@ -43,12 +43,12 @@
 		        $num = count($data);
 		        $index = 0;
 		        
-		        $groupcode = mysql_escape_string($data[$index++]);
-		        $productcode = mysql_escape_string($data[$index++]);
-		        $description = mysql_escape_string($data[$index++]);
-                $estimatedcost = mysql_escape_string($data[$index++]);
-		        $mainsupplierpartnumber = mysql_escape_string($data[$index++]);
-                $rspnet = mysql_escape_string($data[$index++]);
+		        $groupcode = trim($data[$index++]);
+		        $productcode = trim($data[$index++]);
+		        $description = trim($data[$index++]);
+                $estimatedcost = trim($data[$index++]);
+		        $mainsupplierpartnumber = trim($data[$index++]);
+                $rspnet = trim($data[$index++]);
 		        		        
 		        if ($data[0] != "") {
 		        	echo "<div>Product: $productcode</div>";

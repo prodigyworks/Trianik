@@ -23,13 +23,13 @@
 		        $num = count($data);
 		        $index = 0;
 		        
-		        $lastname = mysql_escape_string($data[$index++]);
-		        $firstname = mysql_escape_string($data[$index++]);
+		        $lastname = trim($data[$index++]);
+		        $firstname = trim($data[$index++]);
 		        $name = $firstname . " " . $lastname;
-		        $address = mysql_escape_string($data[$index++]);
-		        $telephone = mysql_escape_string($data[$index++]);
-		        $mobile	 = mysql_escape_string($data[$index++]);
-                $email = mysql_escape_string($data[$index++]);
+		        $address = trim($data[$index++]);
+		        $telephone = trim($data[$index++]);
+		        $mobile	 = trim($data[$index++]);
+                $email = trim($data[$index++]);
 		        		        
 		        if ($data[0] != "") {
 		        	echo "<div>Referee: $firstname $lastname</div>";

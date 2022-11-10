@@ -269,7 +269,7 @@
 	    		 
 	    		$sql = "SELECT *
 			    		FROM {$_SESSION['DB_PREFIX']}applicationactions
-			    		WHERE pageid = {$this->pageid}";
+			    		WHERE pageid = ?";
 	    			
 	    		/* Prepare delete statement. */
 	    		$stmt = SessionControllerClass::getDB()->prepare($sql);

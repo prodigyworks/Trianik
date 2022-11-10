@@ -63,8 +63,8 @@ function getImageData($name, $maxHeight = 300, $maxWidth = 300) {
 	       }
 	       
 	       $image = mysql_real_escape_string($binimage);
-	       $filename = mysql_escape_string($_FILES[$name]['name']);
-	       $description = mysql_escape_string($_POST['description']) ;
+	       $filename = trim($_FILES[$name]['name']);
+	       $description = trim($_POST['description']) ;
 	       
 			$result = mysql_query("INSERT INTO {$_SESSION['DB_PREFIX']}images " .
 					"(description, name, mimetype, image, imgwidth, imgheight, metacreateddate, metacreateduserid, metamodifieddate, metamodifieduserid) " .
@@ -130,7 +130,7 @@ function getFileData($name) {
 		       $binimage = file_get_contents($_FILES[$name]['tmp_name']);
 		       $image = mysql_real_escape_string($binimage);
 		       $size = $_FILES['document']['size'];
-		       $filename = mysql_escape_string($_FILES[$name]['name']);
+		       $filename = trim($_FILES[$name]['name']);
 		       
 				$result = mysql_query("INSERT INTO {$_SESSION['DB_PREFIX']}documents " .
 						"(name, filename, mimetype, image, size, createdby, createddate, metacreateddate, metacreateduserid, metamodifieddate, metamodifieduserid) " .

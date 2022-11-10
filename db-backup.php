@@ -48,7 +48,7 @@ function backup_tables($tables = '*') {
 						}
 						
 					} else {
-						$row[$j] = mysql_escape_string($row[$j]);
+						$row[$j] = trim($row[$j]);
 						
 						if (isset($row[$j])) { 
 							$return.= '"'.$row[$j].'"' ; 

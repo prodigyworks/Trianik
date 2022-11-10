@@ -6,18 +6,18 @@
 	start_db();
 	
 	$caseid = $_POST['caseid'];
-	$quotenumber = strtoupper( mysql_escape_string($_POST['quotenumber']));
-	$paymentnumber = mysql_escape_string($_POST['paymentnumber']);
-	$description = mysql_escape_string($_POST['description']);
+	$quotenumber = strtoupper( trim($_POST['quotenumber']));
+	$paymentnumber = trim($_POST['paymentnumber']);
+	$description = trim($_POST['description']);
 	$shippinghandling = $_POST['shippinghandling'];
 	$paymentdate = convertStringToDate($_POST['paymentdate']);
 	$quotedate = convertStringToDate($_POST['quotedate']);
 	$total = $_POST['total'];
 	$paid = $_POST['paid'];
-	$toaddress = mysql_escape_string($_POST['toaddress']);
-	$deladdress = mysql_escape_string($_POST['deladdress']);
-	$ourref = mysql_escape_string($_POST['ourref']);
-	$yourref = mysql_escape_string($_POST['yourref']);
+	$toaddress = trim($_POST['toaddress']);
+	$deladdress = trim($_POST['deladdress']);
+	$ourref = trim($_POST['ourref']);
+	$yourref = trim($_POST['yourref']);
 	$termsid = $_POST['termsid'];
 	$contactid = $_POST['contactid'];
 	$officeid = $_POST['officeid'];
