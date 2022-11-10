@@ -1,25 +1,44 @@
 <?php
-	require_once("crud.php");
-	
+	require_once(__DIR__ . "/crud.php");
+	require_once(__DIR__ . "/businessobjects/ProductClass.php");
+
 	class ProductCrud extends Crud {
 		
-		/* Post header event. */
-		public function postHeaderEvent() {
-			createDocumentLink();
+		public function postEditScriptEvent() {
+?>
+			$("#groupcode").css("font-style", "");
+			$("#groupcode").css("color", "");
+			$("#productcode").css("font-style", "");
+			$("#productcode").css("color", "");
+<?php
 		}
 		
-		public function postScriptEvent() {
+		public function postAddScriptEvent() {
 ?>
-			function editDocuments(node) {
-				viewDocument(node, "addproductdocument.php", node, "productdocs", "productid");
-			}
-	
-<?php			
+			$("#groupcode").val("Auto Generated");
+			$("#groupcode").css("font-style", "italic");
+			$("#groupcode").css("color", "#888888");
+			$("#productcode").val("Auto Generated");
+			$("#productcode").css("font-style", "italic");
+			$("#productcode").css("color", "#888888");
+<?php
+		}		
+		
+		public function postInsertEvent($id) {
+			SessionControllerClass::getDB()->beginTransaction();
+			
+			$product = new ProductClass();
+			$product->loadRecord($id);
+			$product->setGroupcode(SessionControllerClass::getSiteConfig()->getProductgroupprefix() . $id);
+			$product->setProductcode(SessionControllerClass::getSiteConfig()->getProductcodeprefix() . $id);
+			$product->updateRecord();
+			
+			SessionControllerClass::getDB()->commit();
 		}
 	}
 	
 	$crud = new ProductCrud();
-	$crud->dialogwidth = 740;
+	$crud->dialogwidth = 840;
 	$crud->title = "Products";
 	$crud->table = "{$_SESSION['DB_PREFIX']}product";
 	$crud->sql = "SELECT A.* 
@@ -38,7 +57,14 @@
 				'label' 	 => 'ID'
 			),
 			array(
+				'name'       => 'groupcode',
+				'length' 	 => 20,
+				'readonly'	 => true,
+				'label' 	 => 'Group Code'
+			),			
+			array(
 				'name'       => 'productcode',
+				'readonly'	 => true,
 				'length' 	 => 20,
 				'label' 	 => 'Product Code'
 			),
@@ -56,6 +82,18 @@
 				'label' 	 => 'Image'
 			),			
 			array(
+				'name'       => 'supplier',
+				'required'   => false,
+				'length' 	 => 35,
+				'label' 	 => 'Supplier'
+			),			
+			array(
+				'name'       => 'mainsupplierpartnumber',
+				'required'   => false,
+				'length' 	 => 20,
+				'label' 	 => 'Main Supplier Part Number'
+			),			
+			array(
 				'name'       => 'estimatedcost',
 				'length' 	 => 12,
 				'datatype'   => 'double',
@@ -63,6 +101,13 @@
 				'align'		 => 'right',
 				'label' 	 => 'Estimated Cost'
 			),			
+			array(
+				'name'       => 'rspnet',
+				'length' 	 => 12,
+				'datatype'   => 'double',
+				'align'		 => 'right',
+				'label' 	 => 'RSP net GBP / &pound;'
+			),
 			array(
 				'name'       => 'weight',
 				'length' 	 => 12,
@@ -72,12 +117,17 @@
 				'label' 	 => 'Weight'
 			)
 		);
-
+	
+	$crud->document = array(
+			"tablename"		=>	"productdocs",
+			"primaryidname"	=>	"productid"
+	);
+	
 	$crud->subapplications = array(
 			array(
-				'title'		  => 'Documents',
+				'title'		  => 'Price Breaks',
 				'imageurl'	  => 'images/document.gif',
-				'script' 	  => 'editDocuments'
+				'application' => 'managepricebreaks.php'
 			)
 		);
 		

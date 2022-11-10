@@ -1,31 +1,41 @@
 <?php 
-	//Include database connection details
-	require_once('system-config.php');
+	require_once(__DIR__ . "/pgcore-db.php");
+	require_once(__DIR__ . "/businessobjects/MessageClass.php");
+	require_once(__DIR__ . "/ui/PageUIClass.php");
+	
+	PageUIClass::loadLandingPage();
 ?>
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
-<link href="css/style-19052014.css" rel="stylesheet" type="text/css" />
-<!-- 
+<title><?php echo SessionControllerClass::getSiteConfig()->getCompanyname(); ?></title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+<link rel="shortcut icon" href="<?php echo SessionControllerClass::getSiteConfig()->getDomainurl() . "/system-imageviewer.php?id=" . SessionControllerClass::getSiteConfig()->getFaviconimageid(); ?>">
+
+<link href="css/style-19122017.css" rel="stylesheet" type="text/css" />
 <link href="css/jquery-ui-1.10.3.custom.css" rel="stylesheet" type="text/css" />
- -->
-<link href="css/jquery-ui.css" rel="stylesheet" type="text/css" />
 <link href="css/dcmegamenu.css" rel="stylesheet" type="text/css" />
 <link href="css/skins/white.css" rel="stylesheet" type="text/css" />
-
+<link href="css/toastr.css" rel="stylesheet"/>
 <script src="js/jquery-1.8.0.min.js" type="text/javascript"></script>
 <script src="js/jquery.min.js" type="text/javascript"></script>
 <script src="js/jquery-ui.min.js" type="text/javascript"></script>
 <script src='js/jquery.hoverIntent.minified.js' type='text/javascript'></script>
 <script src='js/jquery.dcmegamenu.1.3.3.js' type='text/javascript'></script>
-<script src="js/oraclelogs.js" language="javascript" ></script>
-<title>FA</title>
-<script>
-	var autoLoad = false;
+<script src="js/prodigyworks-<?php echo SessionControllerClass::getSiteConfig()->getIsolanguage(); ?>-10042019.js" language="javascript" ></script>
+<script src="js/businessobject-20170130.js" language="javascript" ></script>
+<script src="js/toastr.js"></script>
+
+<!--[if lt IE 7]>
+<script type="text/javascript" src="js/ie_png.js"></script>
+<script type="text/javascript">
+	ie_png.fix('.png, .carousel-box .next img, .carousel-box .prev img');
 </script>
+<link href="css/ie6.css" rel="stylesheet" type="text/css" />
+<![endif]-->
 </head>
-<body>
+<body id="page1">
 	<?php
 		if (isset($_POST['command'])) {
 			$_POST['command']();

@@ -1,1 +1,3 @@
-<?php header("location: holidays.php"); ?>
+<?php 
+	header("location: holidays.php");
+?>

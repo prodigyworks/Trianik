@@ -1,6 +1,9 @@
 <?php 
-	include("system-embeddedheader.php");
-	
+require_once(__DIR__ . "/system-embeddedheader.php");
+require_once(__DIR__ . "/businessobjects/UserCollectionClass.php");
+require_once(__DIR__ . "/businessobjects/ClientCollectionClass.php");
+require_once(__DIR__ . "/ui/ComboUIClass.php");
+
 	$mode = $_GET['mode'];
 ?>
 	<script src='./codebase/dhtmlxscheduler.js' type="text/javascript" charset="utf-8"></script>
@@ -94,30 +97,40 @@
 			//===============
 			var sections=[
 <?php 
+				$first = true;
+				
 				if ($mode == "S") {
-					$sql = "SELECT member_id AS id, fullname AS name FROM {$_SESSION['DB_PREFIX']}members ORDER BY fullname	";
+					$cleaners = new UserCollectionClass();
+					$cleaners->loadAllButAdmin(function (UserClass $cleaner) use (&$first) {
+						
+							if ($first) {
+								$first = false;
+							
+							} else {
+								echo ", ";
+							}
+						
+?>
+							{key:<?php echo $cleaner->getMember_id(); ?>, label:"<?php echo $cleaner->getFullname(); ?>"}
+<?php
+						});
 
 				} else if ($mode == "C") {
-					$sql = "SELECT id, name FROM {$_SESSION['DB_PREFIX']}client WHERE status = 'L' ORDER BY name";
-				}
-				
-				$result = mysql_query($sql);
-				$first = true;
-			
-				//Check whether the query was successful or not
-				if($result) {
-					while (($member = mysql_fetch_assoc($result))) {
-						if ($first) {
-							$first = false;
-						} else {
-							echo ", ";
-						}
+					$clients = new ClientCollectionClass();
+					$clients->loadLiveClients(function (ClientClass $client) use (&$first) {
+						
+							if ($first) {
+								$first = false;
+							
+							} else {
+								echo ", ";
+							}
+							
 ?>
-						{key:<?php echo $member['id']; ?>, label:"<?php echo $member['name']; ?>"}
+							{key:<?php echo $client->getId(); ?>, label:"<?php echo $client->getName(); ?>"}
 <?php
-					}
+						});
 				}
-		
 ?>
 			];
 				
@@ -186,5 +199,5 @@
 		</div>		
 	</div>
 <?php 
-	include("system-embeddedfooter.php");
+	require_once(__DIR__ . "/system-embeddedfooter.php");
 ?>

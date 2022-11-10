@@ -50,7 +50,7 @@
 					&nbsp;
 				</td>
 				<td>
-					<a class="link1" href="javascript: runreport();"><em><b>Run Report</b></em></a>
+					<button class="link3" href="javascript: runreport();"><em><b>Run Report</b></em></button>
 				</td>
 			</tr>
 		</table>

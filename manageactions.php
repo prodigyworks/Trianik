@@ -1,5 +1,7 @@
 <?php
-	require_once("crud.php");
+	require_once(__DIR__ . "/crud.php");
+	require_once(__DIR__ . "/ui/ComboUIClass.php");
+	require_once(__DIR__ . "/businessobjects/ApplicationActionRoleClass.php");
 	
 	class ActionEdit extends Crud {
 		
@@ -14,20 +16,29 @@
 				}
 				
 				$actionid = $_POST['actionid'];
-				$qry = "DELETE FROM {$_SESSION['DB_PREFIX']}applicationactionroles WHERE actionid = $actionid";
-				$result = mysql_query($qry);
 				
-				if (! $result) {
-					logError(mysql_error());
-				}
-		
-				for ($i = 0; $i < $counter; $i++) {
-					$roleid = $_POST['roles'][$i];
+				/* start transaction */
+				SessionControllerClass::getDB()->beginTransaction();
+				
+				try {
+					/* Remove previous records. */
+					ApplicationActionRoleClass::deleteRecordsByActionid($actionid);
+			
+					for ($i = 0; $i < $counter; $i++) {
+						$roleid = $_POST['roles'][$i];
+						
+						$action = new ApplicationActionRoleClass();
+						$action->setActionid($actionid);
+						$action->setRoleid($roleid);
+						$action->insertRecord();
+					}
 					
-					$qry = "INSERT INTO {$_SESSION['DB_PREFIX']}applicationactionroles (actionid, roleid, metacreateddate, metacreateduserid, metamodifieddate, metamodifieduserid) VALUES ($actionid, '$roleid', NOW(), " . getLoggedOnMemberID() . ", NOW(), " .  getLoggedOnMemberID() . ")";
-					$result = mysql_query($qry);
-				};
-			}
+					SessionControllerClass::getDB()->commit();
+
+				} catch (Exception $e) {
+					SessionControllerClass::getDB()->rollBack();
+				}
+			} 
 		}
 
 		/* Post header event. */
@@ -40,7 +51,14 @@
 					<input type="hidden" id="actionid" name="actionid" />
 					<input type="hidden" id="rolecmd" name="rolecmd" value="X" />
 					<select class="listpicker" name="roles[]" multiple="true" id="roles" >
-						<?php createComboOptions("roleid", "roleid", "{$_SESSION['DB_PREFIX']}roles", "", false); ?>
+<?php 
+				    ComboUIClass::getInstance()
+					    ->setValue("roleid")
+					    ->setName("roleid")
+					    ->setTable("roles")
+					    ->setRequired(false)
+				    	->renderOptions();
+?>
 					</select>
 				</form>
 			</div>
@@ -65,7 +83,7 @@
 							width: 800,
 							title: "Roles",
 							buttons: {
-								Ok: function() {
+								"Save": function() {
 									$("#rolesForm").submit();
 								},
 								Cancel: function() {
@@ -76,10 +94,20 @@
 				});
 				
 			function actionRoles(actionid) {
-				getJSONData('findactionroles.php?actionid=' + actionid, "#roles", function() {
-					$("#actionid").val(actionid);
-					$("#roleDialog").dialog("open");
-				});
+				businessObjectToJSon({
+						classname: "ApplicationActionRoleUIClass", 
+						methodname: "loadByActionID", 
+						datatype: "html",
+						args: {
+							actionid: actionid
+						},
+						success: function(data) {
+							$("#roles").html(data);
+							
+							$("#actionid").val(actionid);
+							$("#roleDialog").dialog("open");
+						}
+					});
 			}
 <?php
 		}
@@ -89,13 +117,17 @@
 	$crud->title = "Actions";
 	$crud->table = "{$_SESSION['DB_PREFIX']}applicationactions";
 	$crud->allowAdd = false;
-	$crud->dialogwidth = 500;
 	
 	if (isset($_GET['id'])) {
-		$crud->sql = "SELECT * FROM {$_SESSION['DB_PREFIX']}applicationactions WHERE pageid = " . $_GET['id'] . " ORDER BY id";
+		$crud->sql = "SELECT * 
+					  FROM {$_SESSION['DB_PREFIX']}applicationactions 
+					  WHERE pageid = {$_GET['id']}
+					  ORDER BY id";
 		
 	} else {
-		$crud->sql = "SELECT * FROM {$_SESSION['DB_PREFIX']}applicationactions ORDER BY id";
+		$crud->sql = "SELECT * 
+					  FROM {$_SESSION['DB_PREFIX']}applicationactions 
+					  ORDER BY id";
 	}
 	
 	$crud->subapplications = array(

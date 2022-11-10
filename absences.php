@@ -1,39 +1,28 @@
 <?php
-	require_once("crud.php");
+	require_once(__DIR__ . "/crud.php");
+	require_once(__DIR__ . "/businessobjects/AbsenceClass.php");
 	
 	class AbsenceCrud extends Crud {
 		
 		public function postAddScriptEvent() {
-			?>
+?>
 			var myDate = new Date(); 
 			var prettyDate =
 					padZero(myDate.getDate()) + '/' +         
 				    padZero((myDate.getMonth() + 1)) + '/' + 
 					myDate.getFullYear(); 
 					 
-			$("#memberid").val("<?php echo getLoggedOnMemberID();?>").trigger("change");
+			$("#memberid").val("<?php echo SessionControllerClass::getUser()->getMember_id(); ?>").trigger("change");
 			$("#requesteddate").val(prettyDate).trigger("change");
 			$("#startdate").val(prettyDate).trigger("change");
 			$("#enddate").val(prettyDate).trigger("change");
 			$("#startdate_half").attr("checked", true).trigger("change");
 			$("#enddate_half").attr("checked", true).trigger("change");
-			<?php
-		}
-		
-		/* Pre script event. */
-		public function preScriptEvent() {
-			?>
-			var currentID = 0;
-			<?php
-		}
-		
-		public function postInsertEvent() {
+<?php
 		}
 		
 		public function postHeaderEvent() {
-			createConfirmDialog("confirmapprovaldialog", "Confirm approval ?", "approve");
-			
-			?>
+?>
 				<div id="reasondialog" class="modal">
 					<label>Reason</label>
 					<textarea id="reason" name="reason" class="tinyMCE" style='width:770px; height: 300px'></textarea>
@@ -43,7 +32,7 @@
 					<br>
 					<div id="reasondiv" style='width:770px; height: 290px; border: 1px solid black'></div>
 				</div>
-			<?php
+<?php
 		}
 		
 		public function postScriptEvent() {
@@ -98,46 +87,23 @@
 		    } 	
 				
 			function viewReason(id) {
-				callAjax(
-						"findabsence.php", 
-						{ 
-							id: id
-						},
-						function(data) {
-							if (data.length > 0) {
-								var node = data[0];
-								
-								$('#reasondiv').html(node.reason); 
+				businessObjectToJSon({
+							classname: "AbsenceUIClass", 
+							methodname: "load", 
+							args: {
+								id: id
+							},
+							success: function(data) {
+								$('#reasondiv').html(data.reason); 
 								$("#reasondivdialog").dialog("open");
 							}
-						},
-						false
-					);
+						});
 			}
 				
 				
 			/* Full name callback. */
 			function fullName(node) {
 				return (node.firstname + " " + node.lastname);
-			}
-			
-			function approveAbsence(crudID) {
-				currentID = crudID;
-				
-				$("#confirmapprovaldialog .confirmdialogbody").html("You are about to approve this absence.<br>Are you sure ?");
-				$("#confirmapprovaldialog").dialog("open");
-			}
-			
-			function approve() {
-				$("#confirmapprovaldialog").dialog("close");
-				
-				post("editform", "approveAbsence", "submitframe", { absenceid: currentID });
-			}
-			
-			function rejectAbsence(crudID) {
-				currentID = crudID;
-				
-				$("#reasondialog").dialog("open");
 			}
 			
 			function calculateDuration() {
@@ -147,28 +113,6 @@
 				var startDate = new Date(startDateStr.substring(6, 10), (parseFloat(startDateStr.substring(3, 5)) - 1), startDateStr.substring(0, 2));
 				var endDate = new Date(endDateStr.substring(6, 10), (parseFloat(endDateStr.substring(3, 5)) - 1), endDateStr.substring(0, 2));
 				var days = workingDaysBetweenDates(startDate, endDate);
-				
-				callAjax(
-						"findbankabsences.php", 
-						{ 
-							startdate: startDateStr,
-							enddate: endDateStr
-						},
-						function(data) {
-							if (data.length > 0) {
-								for (var i = 0; i < data.length; i++) {
-									var node = data[i];
-									
-									var bankStartDate = new Date(node.startdate.substring(6, 10), (parseFloat(node.startdate.substring(3, 5)) - 1), node.startdate.substring(0, 2));
-									var bankEndDate = new Date(node.enddate.substring(6, 10), (parseFloat(node.enddate.substring(3, 5)) - 1), node.enddate.substring(0, 2));
-									var xdays = workingDaysBetweenDates(bankStartDate, bankEndDate);
-									
-									days -= xdays;
-								}
-							}
-						},
-						false
-					);
 				
 				if (days > 0) {
 					if ($("#startdate_half").attr("checked") == false) {
@@ -236,11 +180,11 @@
 			$this->onClickCallback = "checkStatus";
 	
 			$this->sql = 
-				"SELECT A.*, " .
-				"B.firstname, B.lastname " .
-				"FROM {$_SESSION['DB_PREFIX']}absence A " .
-				"INNER JOIN {$_SESSION['DB_PREFIX']}members B " .
-				"ON B.member_id = A.memberid";
+				"SELECT A.*, 
+				 B.firstname, B.lastname , B.fullname
+				 FROM {$_SESSION['DB_PREFIX']}absence A 
+				 INNER JOIN {$_SESSION['DB_PREFIX']}members B 
+				 ON B.member_id = A.memberid";
 			
 			$this->messages = array(
 					array('id'		  => 'absenceid'),
@@ -270,11 +214,15 @@
 						'label' 	 => 'Employee'
 					),
 					array(
-						'name'       => 'memberid',
-						'datatype'	 => 'user',
-						'length' 	 => 12,
-						'showInView' => false,
-						'label' 	 => 'Employee'
+							'name'       => 'memberid',
+							'type'       => 'DATACOMBO',
+							'length' 	 => 18,
+							'label' 	 => 'Employee',
+							'table'		 => 'members',
+							'required'	 => true,
+							'table_id'	 => 'member_id',
+							'alias'		 => 'fullname',
+							'table_name' => 'fullname'
 					),
 					array(
 						'name'       => 'absencetype',
@@ -368,80 +316,6 @@
 						'label' 	 => 'Duration'
 					)
 				);
-		}
-	}
-	
-	function approveAbsence() {
-		$id = $_POST['absenceid'];
-		$qry = "UPDATE {$_SESSION['DB_PREFIX']}absence SET " .
-				"rejectedby = null, " .
-				"rejecteddate = null, " .
-				"acceptedby = " . getLoggedOnMemberID() . ", " .
-				"accepteddate = NOW() " .
-				"WHERE id = $id";
-		$result = mysql_query($qry);
-		
-		if (! $result) {
-			logError($qry . " - " . mysql_error());
-		}
-		
-		$qry = "SELECT A.memberid, " .
-				"DATE_FORMAT(A.startdate, '%d/%m/%Y') AS startdate, " .
-				"DATE_FORMAT(A.enddate, '%d/%m/%Y') AS enddate " .
-				"FROM {$_SESSION['DB_PREFIX']}absence A " .
-				"WHERE A.id = $id";
-		$result = mysql_query($qry);
-		
-		if ($result) {
-			while (($member = mysql_fetch_assoc($result))) {
-				sendUserMessage(
-						$member['memberid'], 
-						"Absence approved", 
-						"Absence has been approved between " 
-						. $member['startdate'] 
-						. " and " 
-						. $member['enddate'] 
-					);
-			}
-		}
-	}
-	
-	function rejectAbsence() {
-		$id = $_POST['absenceid'];
-		$reason = $_POST['reasonnotes'];
-		
-		$qry = "UPDATE {$_SESSION['DB_PREFIX']}absence SET " .
-				"acceptedby = null, " .
-				"accepteddate = null, " .
-				"reason = '" . mysql_escape_string($reason) . "', " .
-				"rejectedby = " . getLoggedOnMemberID() . ", " .
-				"rejecteddate = NOW() " .
-				"WHERE id = $id";
-		$result = mysql_query($qry);
-		
-		if (! $result) {
-			logError($qry . " - " . mysql_error());
-		}
-		
-		$qry = "SELECT A.memberid, A.reason, " .
-				"DATE_FORMAT(A.startdate, '%d/%m/%Y') AS startdate, " .
-				"DATE_FORMAT(A.enddate, '%d/%m/%Y') AS enddate " .
-				"FROM {$_SESSION['DB_PREFIX']}absence A " .
-				"WHERE A.id = $id";
-		$result = mysql_query($qry);
-		
-		if ($result) {
-			while (($member = mysql_fetch_assoc($result))) {
-				sendUserMessage(
-						$member['memberid'], 
-						"Absence rejected", 
-						"Absence has been rejected between " 
-						. $member['startdate'] 
-						. " and " 
-						. $member['enddate'] 
-						. ", reason: " . $member['reason']
-					);
-			}
 		}
 	}
 	

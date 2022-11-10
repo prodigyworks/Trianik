@@ -1,8 +1,7 @@
 <?php
-	//Include database connection details
-	require_once('system-db.php');
+	require_once(__DIR__ . "/pgcore-db.php");
 	
-	logout();
+	SessionControllerClass::logout();
 
 	header("location: index.php");
 ?>

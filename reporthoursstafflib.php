@@ -1,15 +1,16 @@
 <?php
-	require_once('system-db.php');
-	require_once('pdfreport.php');
-	require_once("simple_html_dom.php");
-	
+	require_once(__DIR__ . "/pgcore-db.php");
+	require_once(__DIR__ . "/pdfreport.php");
+	require_once(__DIR__ . "/simple_html_dom.php");
+	require_once(__DIR__ . "/businessobjects/DiaryCollectionClass.php");
+
 	class HoursWorkedReport extends PDFReport {
 		
-		function AddPage($orientation='', $size='') {
-			parent::AddPage($orientation, $size);
-			
-			$this->Image("images/logomain2.png", 173.6, 1);
-			
+		function AddPage($orientation = '', $format = '', $rotationOrKeepmargins = false, $tocpage = false) {
+			parent::AddPage($orientation, $format, $rotationOrKeepmargins, $tocpage);
+				
+			$this->DynamicImage(SessionControllerClass::getSiteConfig()->getLogoimageid(), 173.6, 1, 30);
+		
 			$size = $this->addText( 10, 13, "Hours - Staff", 12, 4, 'B') + 5;
 			$this->SetFont('Arial','', 8);
 				
@@ -50,33 +51,42 @@
 						INNER JOIN {$_SESSION['DB_PREFIX']}members B 
 						ON B.member_id = A.memberid 
 						WHERE A.status IN ('I', 'C')
-						AND YEAR(A.starttime) = $year
-						AND MONTH(A.starttime) = $month
+						AND YEAR(A.starttime) = ?
+						AND MONTH(A.starttime) = ?
 						GROUP BY B.fullname
 						ORDER BY B.fullname";
-				$result = mysql_query($sql);
 				
-				if ($result) {
-					while (($member = mysql_fetch_assoc($result))) {
-					    
+				$stmt = SessionControllerClass::getDB()->prepare($sql);
+				$stmt->bindValue(1, $year, PDO::PARAM_INT);
+				$stmt->bindValue(2, $month, PDO::PARAM_INT);
+				$stmt->execute();
+				
+				while (($row = $stmt->fetch(PDO::FETCH_ASSOC))) {
+				
         			    $holidays = 0;
         			    $absences = 0;
-        			    $memberid = $member['member_id'];
+        			    $memberid = $row['member_id'];
         			    
         				$sql = "SELECT A.startdate, A.enddate, A.enddate_half, A.startdate_half
         						FROM {$_SESSION['DB_PREFIX']}holiday A 
-                                WHERE A.memberid = $memberid 
-                                AND A.startdate <= '$enddate' 
-                                AND A.enddate >= '$startdate'
+                                WHERE A.memberid = ?
+                                AND A.startdate <= ? 
+                                AND A.enddate >= ?
         						UNION ALL
         						SELECT B.startdate, B.enddate, B.enddate_half, B.startdate_half
         						FROM {$_SESSION['DB_PREFIX']}bankholiday B
-                                WHERE B.startdate <= '$enddate' 
-                                AND B.enddate >= '$startdate'";
-        				$itemresult = mysql_query($sql);
-
-        				if ($itemresult) {
-        					while (($itemmember = mysql_fetch_assoc($itemresult))) {
+                                WHERE B.startdate <= ? 
+                                AND B.enddate >= ?";
+        				
+        				$stmt2 = SessionControllerClass::getDB()->prepare($sql);
+        				$stmt2->bindValue(1, $memberid, PDO::PARAM_INT);
+        				$stmt2->bindValue(2, $enddate, PDO::PARAM_STR);
+        				$stmt2->bindValue(3, $startdate, PDO::PARAM_STR);
+        				$stmt2->bindValue(4, $enddate, PDO::PARAM_STR);
+        				$stmt2->bindValue(5, $startdate, PDO::PARAM_STR);
+        				$stmt2->execute();
+        				
+        				while (($itemmember = $stmt2->fetch(PDO::FETCH_ASSOC))) {
         					    $date1 = new DateTime($startdate);
                                 $date2 = new DateTime($itemmember['startdate']);
 
@@ -119,21 +129,21 @@
                                 if ($itemmember['startdate_half'] == 1) {
                                     $holidays += 0.5;
                                 }
-        					}
-        					
-        				} else {
-        					logError($sql . " - " . mysql_error());
         				}
         					
         				$sql = "SELECT *
         						FROM {$_SESSION['DB_PREFIX']}absence A 
-                                WHERE memberid = $memberid 
-                                AND startdate <= '$enddate' 
-                                AND enddate >= '$startdate'";
-        				$itemresult = mysql_query($sql);
-
-        				if ($itemresult) {
-        					while (($itemmember = mysql_fetch_assoc($itemresult))) {
+                                WHERE memberid = ?
+                                AND startdate <= ? 
+                                AND enddate >= ?";
+        				
+        				$stmt2 = SessionControllerClass::getDB()->prepare($sql);
+        				$stmt2->bindValue(1, $memberid, PDO::PARAM_INT);
+        				$stmt2->bindValue(2, $enddate, PDO::PARAM_STR);
+        				$stmt2->bindValue(3, $startdate, PDO::PARAM_STR);
+        				$stmt2->execute();
+        				
+        				while (($itemmember = $stmt2->fetch(PDO::FETCH_ASSOC))) {
         					    $date1 = new DateTime($startdate);
                                 $date2 = new DateTime($itemmember['startdate']);
 
@@ -176,17 +186,13 @@
                                 if ($itemmember['startdate_half'] == 1) {
                                     $absences += 0.5;
                                 }
-        					}
-        					
-        				} else {
-        					logError($sql . " - " . mysql_error());
         				}
 					    
 						$line=array(
-								"Staff Member"  => $member['customername'],
+								"Staff Member"  => $row['customername'],
             					"Holidays"  => " " . number_format($holidays, 1),
             					"Absences"  => " " . number_format($absences, 1),
-								"Hours Worked"  => number_format($member['hours'] / 60, 2)
+								"Hours Worked"  => number_format($row['hours'] / 60, 2)
 							);
 							
 							
@@ -197,18 +203,12 @@
 						$this->addLine( $this->GetY(), $line, 5.5);
 						$this->Line( 10, $this->GetY() - 0.5, 200, $this->GetY() - 0.5);
 					}
-					
-				} else {
-					logError($sql . " - " . mysql_error());
-				}
 				
 			} catch (Exception $e) {
 				logError($e->getMessage());
 			}
 		}
 	}
-	
-	start_db();
 	
 	$pdf = new HoursWorkedReport( 'P', 'mm', 'A4', $_POST['year'], $_POST['month']);
 	$pdf->Output();

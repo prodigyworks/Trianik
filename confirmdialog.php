@@ -1,5 +1,5 @@
 <?php
-function createConfirmDialog($name, $title, $scriptCallBack) {
+function createConfirmDialog($name, $title, $scriptCallBack, $cancelCallBack = null) {
 ?>
 	
 <div class="modal" id="<?php echo $name; ?>">
@@ -14,6 +14,7 @@ function createConfirmDialog($name, $title, $scriptCallBack) {
 	$(document).ready(function() {
 			$("#<?php echo $name; ?>").dialog({
 					modal: true,
+					width: "auto",
 					autoOpen: false,
 					show:"fade",
 					hide:"fade",
@@ -23,6 +24,8 @@ function createConfirmDialog($name, $title, $scriptCallBack) {
 							<?php echo $scriptCallBack . "();\n"; ?>
 						},
 						"No": function() {
+						    
+							<?php if ($cancelCallBack != null) echo $cancelCallBack . "();\n"; ?>
 							$(this).dialog("close");
 						}
 					}

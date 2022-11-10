@@ -1,204 +1,88 @@
 <?php
-	require_once("crud.php");
-	
+	require_once(__DIR__ . "/crud.php");
+	require_once(__DIR__ . "/businessobjects/PageClass.php");
+	require_once(__DIR__ . "/businessobjects/PageNavigationClass.php");
+	require_once(__DIR__ . "/businessobjects/PageRolesClass.php");
+	require_once(__DIR__ . "/cache/Cache.php");
+	require_once(__DIR__ . "/ui/ComboUIClass.php");
+
+	function setDividerTitle() {
+		$pagenav = new PageNavigationClass();
+		$pagenav->loadByParentAndChildPageId($_POST['navigationpageid'], $_POST['navigationid']);
+		$pagenav->setTitle($_POST['title']);
+		$pagenav->updateRecord();
+	}
+
 	function sequenceUp() {
-		$id = $_POST['navigationid'];
-		$pageid = $_POST['navigationpageid'];
-		$maxsequenceid = -1;
-		$sequence = 0;
-		$nextsequence = 0;
-		
-		$qry = "SELECT sequence " .
-				"FROM {$_SESSION['DB_PREFIX']}pagenavigation A " .
-				"WHERE A.pageid = $pageid " .
-				"AND A.childpageid = $id ";
-		$result = mysql_query($qry);
-
-		//Check whether the query was successful or not
-		if ($result) {
-			if (mysql_num_rows($result) == 1) {
-				$member = mysql_fetch_assoc($result);
-				
-				$sequence = $member['sequence'];
-			}
-			
-		} else {
-			logError(mysql_error());
-		}
-		
-		$qry = "SELECT pagenavigationid, sequence " .
-				"FROM {$_SESSION['DB_PREFIX']}pagenavigation A " .
-				"WHERE A.pageid = $pageid AND " .
-				"A.sequence < $sequence " .
-				"ORDER BY A.sequence DESC ";
-		$result = mysql_query($qry);
-
-		//Check whether the query was successful or not
-		if ($result) {
-			if (mysql_num_rows($result) >= 1) {
-				$member = mysql_fetch_assoc($result);
-				
-				$maxsequenceid = $member['pagenavigationid'];
-				$nextsequence = $member['sequence'];
-			}
-			
-		} else {
-			logError(mysql_error());
-		}
-		
-		if ($maxsequenceid != -1) {
-			$qry = "UPDATE {$_SESSION['DB_PREFIX']}pagenavigation " .
-					"SET sequence = '$nextsequence', metamodifieddate = NOW(), metamodifieduserid = " . getLoggedOnMemberID() . " " .
-					"WHERE pageid = $pageid " .
-					"AND childpageid = $id ";
-
-			$result = mysql_query($qry);
-			
-			if (! $result) {
-				logError(mysql_error());
-			}
-			
-			$qry = "UPDATE {$_SESSION['DB_PREFIX']}pagenavigation " .
-					"SET sequence = '$sequence', metamodifieddate = NOW(), metamodifieduserid = " . getLoggedOnMemberID() . " " .
-					"WHERE pagenavigationid = $maxsequenceid";
-			$result = mysql_query($qry);
-			
-			if (! $result) {
-				logError(mysql_error());
-			}
-		}
-		
-		unset($_SESSION['MENU_CACHE']);
+		$pagenav = new PageNavigationClass();
+		$pagenav->loadByParentAndChildPageId($_POST['navigationpageid'], $_POST['navigationid']);
+		$pagenav->moveUp();
 	}
 	
-	function sequenceDown() {		$id = $_POST['navigationid'];
-		$pageid = $_POST['navigationpageid'];
-		$maxsequenceid = -1;
-		$sequence = 0;
-		$nextsequence = 0;
-		
-		$qry = "SELECT sequence " .
-				"FROM {$_SESSION['DB_PREFIX']}pagenavigation A " .
-				"WHERE A.pageid = $pageid " .
-				"AND A.childpageid = $id ";
-		$result = mysql_query($qry);
-
-		//Check whether the query was successful or not
-		if ($result) {
-			if (mysql_num_rows($result) == 1) {
-				$member = mysql_fetch_assoc($result);
-				
-				$sequence = $member['sequence'];
-			}
-			
-		} else {
-			logError(mysql_error());
-		}
-		
-		$qry = "SELECT pagenavigationid, sequence " .
-				"FROM {$_SESSION['DB_PREFIX']}pagenavigation A " .
-				"WHERE A.pageid = $pageid AND " .
-				"A.sequence > $sequence " .
-				"ORDER BY A.sequence ";
-		$result = mysql_query($qry);
-
-		//Check whether the query was successful or not
-		if ($result) {
-			if (mysql_num_rows($result) >= 1) {
-				$member = mysql_fetch_assoc($result);
-				
-				$maxsequenceid = $member['pagenavigationid'];
-				$nextsequence = $member['sequence'];
-			}
-			
-		} else {
-			logError(mysql_error());
-		}
-		
-		if ($maxsequenceid != -1) {
-			$qry = "UPDATE {$_SESSION['DB_PREFIX']}pagenavigation " .
-					"SET sequence = '$nextsequence', metamodifieddate = NOW(), metamodifieduserid = " . getLoggedOnMemberID() . " " .
-					"WHERE pageid = $pageid " .
-					"AND childpageid = $id ";
-
-			$result = mysql_query($qry);
-			
-			if (! $result) {
-				logError(mysql_error());
-			}
-			
-			$qry = "UPDATE {$_SESSION['DB_PREFIX']}pagenavigation " .
-					"SET sequence = '$sequence', metamodifieddate = NOW(), metamodifieduserid = " . getLoggedOnMemberID() . " " .
-					"WHERE pagenavigationid = $maxsequenceid";
-			$result = mysql_query($qry);
-			
-			if (! $result) {
-				logError(mysql_error());
-			}
-		}
-		
-		unset($_SESSION['MENU_CACHE']);
+	function sequenceDown() {		
+		$pagenav = new PageNavigationClass();
+		$pagenav->loadByParentAndChildPageId($_POST['navigationpageid'], $_POST['navigationid']);
+		$pagenav->moveDown();
 	}
 	
 	function saveContent() {
-		$pageid = $_POST['contentpageid'];
-		$contentvalue = mysql_escape_string($_POST['contentvalue']);
-		
-		$qry = "UPDATE {$_SESSION['DB_PREFIX']}pages SET content = '$contentvalue', metamodifieddate = NOW(), metamodifieduserid = " . getLoggedOnMemberID() . " WHERE pageid = $pageid";
-		$result = mysql_query($qry);
-		
-		if (! $result) {
-			logError(mysql_error());
-		}
+		$page = new PageClass();
+		$page->loadRecord($_POST['contentpageid']);
+		$page->setContent($_POST['contentvalue']);
+		$page->updateRecord();
 	}
 	
 	class PageEdit extends Crud {
-		/* Post insert event. */
-		public function postInsertEvent() {
-			$pageid = mysql_insert_id();
-			$parentpageid = 1;
+		public function postUpdateEvent($pageid) {
+			$cache = new Cache(array(
+					'name'      => 'page-cache',
+					'path'      => __DIR__ . "/tmp/",
+					'extension' => '.cache'
+				));
 			
+			$cache->eraseAll();
+		}
+		
+		/* Post insert event. */
+		public function postInsertEvent($pageid) {
 			if (isset($_GET['id'])) {
 				$parentpageid = $_GET['id'];
-			}
-			
-			$maxSequence = 0;
-			
-			$qry = "SELECT MAX(sequence) AS maxseq " .
-					"FROM {$_SESSION['DB_PREFIX']}pagenavigation A " .
-					"WHERE A.pageid = $parentpageid";
-			$result = mysql_query($qry);
-
-			//Check whether the query was successful or not
-			if ($result) {
-				if (mysql_num_rows($result) == 1) {
-					$member = mysql_fetch_assoc($result);
-					
-					$maxSequence = $member['maxseq'];
-				}
-			}
-			
-			$maxSequence += 100;
-			
-			$qry = "INSERT INTO {$_SESSION['DB_PREFIX']}pageroles (pageid, roleid, metacreateddate, metacreateduserid, metamodifieddate, metamodifieduserid) VALUE($pageid, 'PUBLIC', NOW(), " . getLoggedOnMemberID() . ", NOW(), " .  getLoggedOnMemberID() . ")";
-			$result = mysql_query($qry);
-			
-			if (! $result) {
-				logError($qry . " - " . mysql_error());
-			}
-			
-			if ($_POST['menuitem'] == "Y") {
-				$qry = "INSERT INTO {$_SESSION['DB_PREFIX']}pagenavigation (pageid, childpageid, sequence, pagetype, metacreateddate, metacreateduserid, metamodifieddate, metamodifieduserid) VALUE($parentpageid, $pageid, $maxSequence, 'M', NOW(), " . getLoggedOnMemberID() . ", NOW(), " .  getLoggedOnMemberID() . ")";
 				
 			} else {
-				$qry = "INSERT INTO {$_SESSION['DB_PREFIX']}pagenavigation (pageid, childpageid, sequence, pagetype, metacreateddate, metacreateduserid, metamodifieddate, metamodifieduserid) VALUE($parentpageid, $pageid, $maxSequence, 'L', NOW(), " . getLoggedOnMemberID() . ", NOW(), " .  getLoggedOnMemberID() . ")";
+				$parentpageid = PageClass::PAGE_HOMEPAGE;
+			}
+
+			/* Load the parent page. */
+			$page = new PageClass();
+			$page->loadRecord($parentpageid);
+
+			/* Create page role - default is PUBLIC. */
+			$pagerole = new PagerolesClass();
+			$pagerole->setPageid($pageid);
+			$pagerole->setRoleid("PUBLIC");
+			$pagerole->insertRecord();
+			
+			$pagenav = new PageNavigationClass();
+			$pagenav->setPageid($parentpageid);
+			$pagenav->setChildpageid($pageid);
+			$pagenav->setSequence($page->getMaximumSequenceForPage());
+
+			if ($_POST['menuitem'] == "Y") {
+				if ($parentpageid == PageClass::PAGE_HOMEPAGE) {
+					$pagenav->setPagetype(PageNavigationClass::PAGENAVIGATIONTYPE_PAGE);
+						
+				} else {
+					$pagenav->setPagetype(PageNavigationClass::PAGENAVIGATIONTYPE_MENU);
+				}
+			
+			} else if ($_POST['menuitem'] == "X") {
+				$pagenav->setPagetype(PageNavigationClass::PAGENAVIGATIONTYPE_MOBILE);
+			
+			} else {
+				$pagenav->setPagetype(PageNavigationClass::PAGENAVIGATIONTYPE_HIDDEN);
 			}
 			
-			$result = mysql_query($qry);
-			
-			if (! $result) {
-				logError($qry . " - " . mysql_error());
-			}
+			$pagenav->insertRecord();
 		}
 		
 		/* Pre command event. */
@@ -211,20 +95,28 @@
 					$counter = 0;
 				}
 				
-				$pageid = $_POST['pageid'];
-				$qry = "DELETE FROM {$_SESSION['DB_PREFIX']}pageroles WHERE pageid = $pageid";
-				$result = mysql_query($qry);
+				SessionControllerClass::getDB()->beginTransaction();
 				
-				if (! $result) {
-					logError(mysql_error());
-				}
-		
-				for ($i = 0; $i < $counter; $i++) {
-					$roleid = $_POST['roles'][$i];
+				try {
+					/* Load the page. */
+					$page = new PageClass();
+					$page->loadRecord($_POST['pageid']);
+					$page->deletePageRoles();
+			
+					for ($i = 0; $i < $counter; $i++) {
+						$pagerole = new PagerolesClass();
+						$pagerole->setPageid($_POST['pageid']);
+						$pagerole->setRoleid($_POST['roles'][$i]);
+						$pagerole->insertRecord();
+					};
 					
-					$qry = "INSERT INTO {$_SESSION['DB_PREFIX']}pageroles (pageid, roleid, metacreateddate, metacreateduserid, metamodifieddate, metamodifieduserid) VALUES ($pageid, '$roleid', NOW(), " . getLoggedOnMemberID() . ", NOW(), " .  getLoggedOnMemberID() . ")";
-					$result = mysql_query($qry);
-				};
+					SessionControllerClass::getDB()->commit();
+					
+				} catch (Exception $e) {
+					SessionControllerClass::getDB()->rollBack();
+					
+					throw $e;
+				}
 			}
 		}
 
@@ -238,12 +130,24 @@
 				<textarea id="editemailnotes" name="editemailnotes" class="tinyMCE" cols="180" rows=17 style="height: 400px"></textarea>
 			</div>
 			
+			<div id="divider_dialog" class="modal">
+				<label>Title</label>
+				<input type="text" size=40 id="divider_title" />
+			</div>
+			
 			<div id="roleDialog" class="modal">
 				<form id="rolesForm" name="rolesForm" method="post">
 					<input type="hidden" id="pageid" name="pageid" />
 					<input type="hidden" id="rolecmd" name="rolecmd" value="X" />
 					<select class="listpicker" name="roles[]" multiple="true" id="roles" >
-						<?php createComboOptions("roleid", "roleid", "{$_SESSION['DB_PREFIX']}roles", "", false); ?>
+<?php 
+					    ComboUIClass::getInstance()
+						    ->setValue("roleid")
+						    ->setName("roleid")
+						    ->setTable("roles")
+						    ->setRequired(false)
+					        ->renderOptions();
+?>
 					</select>
 				</form>
 			</div>
@@ -267,6 +171,12 @@
 				?>;
 				
 				post("editform", "sequenceUp", "submitframe", { navigationid: id, navigationpageid: pageid});
+			}
+			
+			function setTitleDivider(id) {
+				currentPageID = id;
+				
+				$("#divider_dialog").dialog("open");
 			}
 			
 			function sequenceDown(id) {
@@ -308,11 +218,41 @@
 					$("#roleDialog").dialog({
 							autoOpen: false,
 							modal: true,
-							width: 800,
+							width: "auto",
 							title: "Roles",
 							buttons: {
-								Ok: function() {
+								"Save": function() {
 									$("#rolesForm").submit();
+								},
+								Cancel: function() {
+									$(this).dialog("close");
+								}
+							}
+						});
+					
+					$("#divider_dialog").dialog({
+							autoOpen: false,
+							modal: true,
+							width: "auto",
+							title: "Divider Title",
+							buttons: {
+								"Update": function() {
+									var pageid = <?php
+										if (isset($_GET['id'])) {
+											echo $_GET['id'];
+											
+										} else {
+											echo "1";
+										}
+									?>;
+									
+									post("editform", "setDividerTitle", "submitframe", { 
+										navigationid: currentPageID, 
+										navigationpageid: pageid, 
+										title: $("#divider_title").val()
+									});
+									
+									$(this).dialog("close");
 								},
 								Cancel: function() {
 									$(this).dialog("close");
@@ -326,7 +266,7 @@
 							width: 800,
 							title: "Content",
 							buttons: {
-								Ok: function() {
+								"Save": function() {
 									tinyMCE.triggerSave();
 									
 									$(this).dialog("close");
@@ -351,24 +291,40 @@
 			function editContent(pageid) {
 				currentPageID = pageid;
 				
-				callAjax(
-						"finddata.php", 
-						{ 
-							sql: "SELECT content FROM <?php echo $_SESSION['DB_PREFIX'];?>pages WHERE pageid = " + pageid
+				businessObjectToJSon({
+						classname: "PageUIClass", 
+						methodname: "load", 
+						args: {
+							pageid: pageid
 						},
-						function(data) {
-							tinyMCE.get("editemailnotes").setContent(data[0].content);
+						success: function(data) {
+							if (data.content == null) {
+								tinyMCE.get("editemailnotes").setContent("");
+								
+							} else {
+								tinyMCE.get("editemailnotes").setContent(data.content);
+							}
+							
+							$("#contentDialog").dialog("open");
 						}
-					);
-				
-				$("#contentDialog").dialog("open");
+					});
 			}
 				
 			function pageRoles(pageid) {
-				getJSONData('findpageroles.php?pageid=' + pageid, "#roles", function() {
-					$("#pageid").val(pageid);
-					$("#roleDialog").dialog("open");
-				});
+				businessObjectToJSon({
+						classname: "PageRolesUIClass", 
+						methodname: "loadByPageID", 
+						datatype: "html",
+						args: {
+							pageid: pageid
+						},
+						success: function(data) {
+							$("#roles").html(data);
+							
+							$("#pageid").val(pageid);
+							$("#roleDialog").dialog("open");
+						}
+					});
 			}
 <?php
 		}
@@ -377,38 +333,38 @@
 	$crud = new PageEdit();
 	$crud->title = "Pages";
 	$crud->table = "{$_SESSION['DB_PREFIX']}pages";
-	$crud->dialogwidth = 600;
 	
 	if (isset($_GET['id'])) {
 		$crud->sql = 
-				"SELECT A.*, B.pagetype " .
-				"FROM {$_SESSION['DB_PREFIX']}pages A " .
-				"INNER JOIN {$_SESSION['DB_PREFIX']}pagenavigation B " .
-				"ON B.childpageid = A.pageid " .
-				"AND B.pagetype != 'P' " .
-				"WHERE B.pageid = " . $_GET['id'] . " " .
-				"ORDER BY B.sequence"; 
+				"SELECT A.*, B.pagetype 
+				 FROM {$_SESSION['DB_PREFIX']}pages A 
+				 INNER JOIN {$_SESSION['DB_PREFIX']}pagenavigation B 
+				 ON B.childpageid = A.pageid 
+				 AND B.pagetype != 'P' 
+				 WHERE B.pageid = {$_GET['id']}
+				 ORDER BY B.sequence"; 
 		
 	} else {
 		$crud->sql = 
-				"SELECT A.*, B.pagetype " .
-				"FROM {$_SESSION['DB_PREFIX']}pages A " .
-				"INNER JOIN {$_SESSION['DB_PREFIX']}pagenavigation B " .
-				"ON B.childpageid = A.pageid " .
-				"AND B.pagetype = 'P' " .
-				"WHERE B.pageid = 1 " . 
-				"ORDER BY B.sequence"; 
+				"SELECT A.*, B.pagetype 
+				 FROM {$_SESSION['DB_PREFIX']}pages A 
+				 INNER JOIN {$_SESSION['DB_PREFIX']}pagenavigation B 
+				 ON B.childpageid = A.pageid 
+				 AND B.pagetype = 'P'
+				 WHERE B.pageid = 1  
+				 ORDER BY B.sequence"; 
 	}
 	
 	$crud->messages = array(
 			array('id'		  => 'contentvalue'),
 			array('id'		  => 'contentpageid'),
+			array('id'		  => 'title'),
 			array('id'		  => 'navigationid'),
 			array('id'		  => 'navigationpageid')
 		);
 	$crud->subapplications = array(
 			array(
-				'title'		  => 'Nav',
+				'title'		  => 'Navigate',
 				'imageurl'	  => 'images/minimize.gif',
 				'application' => 'managepages.php'
 			),
@@ -436,6 +392,11 @@
 				'title'		  => 'Move Down',
 				'imageurl'	  => 'images/down.png',
 				'script'      => 'sequenceDown'
+			),
+			array(
+				'title'		  => 'Set Title Divider',
+				'imageurl'	  => 'images/appraisal.png',
+				'script'      => 'setTitleDivider'
 			)
 		);
 	$crud->columns = array(
@@ -495,6 +456,10 @@
 						array(
 							'value'		=> 'N',
 							'text'		=> 'No'
+						),
+						array(
+							'value'		=> 'X',
+							'text'		=> 'Mobile Only'
 						)
 					)
 			)

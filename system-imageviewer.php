@@ -1,55 +1,21 @@
 <?php
-	require_once('system-db.php');
-	
-	start_db();
+	require_once(__DIR__ . "/pgcore-db.php");
+	require_once(__DIR__ . "/businessobjects/ImageClass.php");
 
-	$id = $_GET['id'];
-	
-	if(!isset($id)){
-	     logError("Please select your image!");
+	if(! isset($_GET['id'])){
+	     SessionControllerClass::error("Please select your image!");
 	     
 	} else {
-		$dirname = "uploads/image$id";
+		$image = new ImageClass(true);
+		$image->loadRecord($_GET['id']);
 		
-		if (is_dir($dirname)) {
-			if ($handle = opendir($dirname)) {
-			    while (false !== ($entry = readdir($handle))) {
-			        if ($entry != "." && $entry != "..") {
-			            header("location: " . getSiteConfigData()->domainurl . "/$dirname/$entry");
-			        }
-			    }
-			    closedir($handle);
-			}
-			
-		} else {
-			$query = mysql_query(
-					"SELECT mimetype, name, image " .
-					"FROM {$_SESSION['DB_PREFIX']}images " .
-					"WHERE id= ". $id
-				);
-			$row = mysql_fetch_array($query);
-			
-			$content = $row['image'];
-			$name = $row['name'];
-			
-			header('Content-type: ' . $row['mimetype']);
-			
-			try {
-				if (! is_dir($dirname)) {
-					error_reporting(0);
-					
-					mkdir($dirname);
-					chmod($dirname, 0777);
-				}
+		$expires = 60*60*24*14;
+		header("Pragma: public");
+		header("Cache-Control: maxage=$expires");
+		header('Expires: ' . gmdate('D, d M Y H:i:s', time() + $expires) . ' GMT');
+		header("Content-type: text/plain");
+		header("Content-type: {$image->getMimetype()}");
 
-				file_put_contents("$dirname/$name", ($content));
-				
-			} catch (Exception $e) {
-				logError($e->getMessage(), false);
-			}
-			
-			
-		    echo $content;
-		}
+		echo $image->getImage();
 	}
 ?> 

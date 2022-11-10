@@ -1485,7 +1485,7 @@ class Image {
     }
 
     function ShadowRectangle($xl,$yu,$xr,$yl,$fcolor=false,$shadow_width=4,$shadow_color='darkgray',$useAlpha=true) {
-        // This is complicated by Trianik Planning Systemct that we must also handle the case where
+        // This is complicated by the fact that we must also handle the case where
         // the reactangle has no fill color
         $xl = floor($xl);
         $yu = floor($yu);

@@ -1,23 +1,20 @@
 <?php
-	require_once("crud.php");
-	
+	require_once(__DIR__ . "/crud.php");
+	require_once(__DIR__ . "/businessobjects/ErrorClass.php");
+
 	function clearAllErrors() {
-		mysql_query("DELETE FROM {$_SESSION['DB_PREFIX']}errors");
+		SessionControllerClass::getDB()->beginTransaction();
+		
+		ErrorsClass::clear();
+		
+		SessionControllerClass::getDB()->commit();
+		
 	}
 	
 	class ErrorCrud extends Crud {
 		
 		public function postScriptEvent() {
 ?>
-			/* Full name callback. */
-			function fullName(node) {
-				if (node.firstname == null) {
-					return "System Management Process";
-				}
-				
-				return (node.firstname + " " + node.lastname);
-			}
-			
 			function clearErrors(id) {
 				post("editform", "clearAllErrors", "submitframe", {});
 			}
@@ -32,13 +29,13 @@
 	$crud->table = "{$_SESSION['DB_PREFIX']}errors";
 	$crud->dialogwidth = 900;
 	$crud->sql = 
-			"SELECT A.*, B.label, C.firstname, C.lastname " .
-			"FROM {$_SESSION['DB_PREFIX']}errors A " .
-			"INNER JOIN {$_SESSION['DB_PREFIX']}pages B " .
-			"ON B.pageid = A.pageid " .
-			"LEFT OUTER	 JOIN {$_SESSION['DB_PREFIX']}members C " .
-			"ON C.member_id = A.memberid " .
-			"ORDER BY A.id DESC";
+			"SELECT A.*, B.label, C.fullname
+			 FROM {$_SESSION['DB_PREFIX']}errors A 
+			 INNER JOIN {$_SESSION['DB_PREFIX']}pages B 
+			 ON B.pageid = A.pageid 
+			 LEFT OUTER	 JOIN {$_SESSION['DB_PREFIX']}members C 
+			 ON C.member_id = A.memberid 
+			 ORDER BY A.id DESC";
 	
 	$crud->columns = array(
 			array(
@@ -56,7 +53,7 @@
 				'showInView' => false,
 				'editable'	 => false,
 				'bind' 	 	 => false,
-				'label' 	 => 'ID'
+				'label' 	 => 'Page ID'
 			),
 			array(
 				'name'       => 'createddate',
@@ -70,10 +67,8 @@
 				'label' 	 => 'Page'
 			),
 			array(
-				'name'       => 'user',
-				'type'		 => 'DERIVED',
+				'name'       => 'fullname',
 				'length' 	 => 60,
-				'function'	 => 'fullName',
 				'label' 	 => 'User'
 			),
 			array(

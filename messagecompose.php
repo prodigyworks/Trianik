@@ -1,12 +1,20 @@
 <?php
-	require_once("system-db.php");
-	
-	start_db();
+	require_once(__DIR__ . "/pgcore-db.php");
+	require_once("businessobjects/UserCollectionClass.php");
+	require_once("businessobjects/UserClass.php");
+	require_once("businessobjects/MessageClass.php");
 	
 	if (isset($_POST['mailcommand'])) {
 		
 		foreach($_POST['ticked'] as $chkval) {
-			sendInternalUserMessage($chkval, $_POST['subject'], $_POST['composemessage']);
+			UserClass::getUser($chkval)->sendInternalEmail(
+					$_POST['subject'], 
+					$_POST['composemessagetext'], 
+					"", 
+					array(), 
+					"", 
+					SessionControllerClass::getUser()->getMemberid()
+				);
         }
 		
 		header("location: messages.php");
@@ -25,10 +33,10 @@
 	}
 	
 </SCRIPT>
-<div class="viewmessage">
-	<form method="POST" id="frmpost" name="frmpost">
+<div class="viewmessage containerform">
+	<form method="POST" id="frmpost" name="frmpost" class="entryxform">
 		<input type="hidden" name="mailcommand" id="mailcommand" />
-		<table class="composetable" cellspacing=4>
+		<table class="composetable" cellspacing=0 cellpadding=0>
 			<tr>
 				<td valign=top>
 					Send To
@@ -36,39 +44,32 @@
 				<td valign=top>
 					<div class="userselector">
 						<table>
-						
-						<?php
-							$qry = "SELECT member_id, imageid, firstname, lastname " .
-									"FROM {$_SESSION['DB_PREFIX']}members " .
-									"ORDER BY firstname, lastname";
-									 
-							$result = mysql_query($qry);
+<?php
+							$users = new UserCollectionClass();
+							$users->loadAvailbleForMessaging();
 							
-							if (! $result) logError("Error: " . mysql_error());
-							
-							//Check whether the query was successful or not
-							if ($result) {
-								while (($member = mysql_fetch_assoc($result))) {
-								?>
-									<tr>
-										<td width='16px'>	
-											<input type="checkbox" id="ticked" name="ticked[]" class="ticked" value="<?php echo $member['member_id']; ?>" />
-										</td>
-										<td width='30px'>	
-											<?php
-												if ($member['imageid'] != null && $member['imageid'] != 0) {
-											?>
-												<img height=32 src="system-imageviewer.php?id=<?php echo $member['imageid']; ?>" />
-											<?php
-												}
-											?>
-										</td>
-										<td>	
-											<?php echo $member['firstname'] . " " . $member['lastname']; ?>
-										</td>
-									</tr>	
-								<?php
-								}
+							foreach($users->getUsers() AS $user) {
+?>
+							<tr>
+								<td width='16px'>	
+									<input type="checkbox" id="ticked" name="ticked[]" class="ticked" value="<?php echo $user->getMemberid(); ?>" />
+								</td>
+								<td width='30px'>	
+									<?php
+										if ($user->getImageid() != null && $user->getImageid() != 0) {
+									?>
+										<img height=32 style='max-width:30px' src="system-imageviewer.php?id=<?php echo $user->getImageid(); ?>" />
+									<?php
+										}
+									?>
+								</td>
+								<td>	
+<?php 
+									echo $user->getFullname(); 
+?>
+								</td>
+							</tr>	
+<?php
 							}
 						?>
 						</table>
@@ -88,7 +89,7 @@
 					Message
 				</td>
 				<td valign=top>
-					<textarea id="composemessage" name="composemessage" class="tinyMCE"></textarea>
+					<textarea id="composemessagetext" name="composemessagetext" cols=60 rows=5 class="tinyMCE" style="height:200px"></textarea>
 				</td>
 			</tr>
 			<tr>
@@ -96,60 +97,37 @@
 					&nbsp;
 				</td>
 				<td valign=top>
-					<a class='link1 rgap5' href="javascript: send()"><em><b>Send</b></em></a>
-					<a class='link1' href='messages.php'><em><b>Cancel</b></em></a>
+					<a class='link2 rgap5' href="javascript: send()"><em><b>Send</b></em></a>
+					<a class='link2' href='messages.php'><em><b>Cancel</b></em></a>
 				</td>
 			</tr>
 		</table>
 		<script>
 			$(document).ready(
 					function() {
-						<?php
-							if (isset($_GET['id'])) {
-								$id = $_GET['id'];
-								$qry = "SELECT subject, message, from_member_id " .
-										"FROM {$_SESSION['DB_PREFIX']}messages " .
-										"WHERE id = $id";
-										 
-								$result = mysql_query($qry);
-								
-								if (! $result) logError("Error: " . mysql_error());
-								
-								//Check whether the query was successful or not
-								if ($result) {
-									while (($member = mysql_fetch_assoc($result))) {
-									?>
-										$("#composemessage").val("<br><hr /><?php echo mysql_escape_string($member['message']); ?>");
-										$("#composemessage").focus();
-										$("#subject").val("Re: <?php echo mysql_escape_string($member['subject']); ?>");
-										$(".ticked[value=<?php echo $member['from_member_id']; ?>]").attr("checked", true);
-									<?php
-									}
-								}
-							}
-							
-							if (isset($_GET['forwardid'])) {
-								$id = $_GET['forwardid'];
-								$qry = "SELECT subject, message, from_member_id " .
-										"FROM {$_SESSION['DB_PREFIX']}messages " .
-										"WHERE id = $id";
-										 
-								$result = mysql_query($qry);
-								
-								if (! $result) logError("Error: " . mysql_error());
-								
-								//Check whether the query was successful or not
-								if ($result) {
-									while (($member = mysql_fetch_assoc($result))) {
-									?>
-										$("#composemessage").val("<?php echo mysql_escape_string($member['message']); ?>");
-										$("#composemessage").focus();
-										$("#subject").val("<?php echo mysql_escape_string($member['subject']); ?>");
-									<?php
-									}
-								}
-							}
-						?>
+<?php
+						if (isset($_GET['id'])) {
+							$message = new MessageClass();
+							$message->loadRecord($_GET['id']);
+?>
+							$(".ticked[value=<?php echo $message->getFrom_member_id(); ?>]").attr("checked", true);
+							$("#subject").val("Re: <?php echo mysql_real_escape_string($message->getSubject()); ?>");
+							$("#composemessagetext").val("<br><hr /><?php echo mysql_real_escape_string($message->getMessage()); ?>");
+<?php
+						} else if (isset($_GET['forwardid'])) {
+							$message = new MessageClass();
+							$message->loadRecord($_GET['forwardid']);
+?>
+							$("#subject").val("Fwd: <?php echo mysql_real_escape_string($message->getSubject()); ?>");
+							$("#composemessagetext").val("<br><hr /><?php echo mysql_real_escape_string($message->getMessage()); ?>");
+<?php
+						} else {
+?>
+							$("#subject").val("");
+							$("#composemessagetext").val("");
+<?php
+						}
+?>
 					}
 				);
 		</script>

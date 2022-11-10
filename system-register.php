@@ -1,21 +1,25 @@
 <?php include("system-header.php"); ?>
 
-<!--  Start of content -->
 <?php
-if( isset($_SESSION['ERRMSG_ARR']) && is_array($_SESSION['ERRMSG_ARR']) && count($_SESSION['ERRMSG_ARR']) >0 ) {
+if( isset($_SESSION['ERRMSG_ARR'])) {
 ?>
-<div id="errorwindow">
-	<?php showErrors(); ?>
-</div>
+	<script>
+		$(document).ready(
+				function() {
+					pwAlert("<?php echo escape_notes($_SESSION['ERRMSG_ARR']); ?>");
+				}
+			);
+	</script>
 <?php
+	unset($_SESSION['ERRMSG_ARR']);
 }
 ?>
-<div class="registerPage">
-	<h4>Staff Registry</h4>
-	<form id="loginForm" enctype="multipart/form-data" name="loginForm" class="entryform manualform" method="post" action="system-register-exec.php">
-	  <table border="0" align="left" cellspacing=7>
+	<script src='js/jquery.ui.timepicker.js'></script>
+	<form id="loginForm" enctype="multipart/form-data" name="loginForm" class="entryform" method="post" action="system-register-exec.php">
+	<h4><?php echo SessionControllerClass::getPage()->getLabel(); ?></h4>
+	  <table border="0" align="left">
 	    <tr>
-	      <td>First Name </td>
+	      <td width='150px'>First Name </td>
 	      <td><input required="true" name="fname" type="text" class="textfield" id="fname" /></td>
 	    </tr>
 	    <tr>
@@ -24,27 +28,22 @@ if( isset($_SESSION['ERRMSG_ARR']) && is_array($_SESSION['ERRMSG_ARR']) && count
 	    </tr>
 	    <tr>
 	      <td>Login</td>
-	      <td><input required="true" name="login" type="text" class="textfield logintext" id="login" /></td>
+	      <td><input required="true" name="login" type="text" class="textfield60 logintext" id="login" /></td>
 	    </tr>
 	    <tr>
 	      <td>Email</td>
-	      <td><input required="true" name="email" type="text" class="textfield60" id="email" /></td>
+	      <td><input required="true" name="email" type="email" class="textfield60" id="email" /></td>
 	    </tr>
 	    <tr>
 	      <td>Confirm Email</td>
-	      <td><input required="true" name="confirmemail" type="text" class="textfield60" id="confirmemail" /></td>
+	      <td><input required="true" name="confirmemail" type="email" class="textfield60" id="confirmemail" /></td>
 	    </tr>
 	    <tr>
-	      <td>Mobile</td>
-	      <td><input name="mobile" type="text" size=14 id="mobile" /></td>
-	    </tr>
-	    <tr>
-	      <td>Holiday Entitlement</td>
-	      <td><input name="entitlement" type="text" size=5 id="entitlement" /></td>
+	      <td>Image</td>
+	      <td><input name="image" type="file" class="textfield60" id="image" /></td>
 	    </tr>
 	    <tr>
 	    	<td colspan="2">
-	    		<br />
 	    		<h4>Security</h4>
 	    		<hr />
 	    	</td>
@@ -62,33 +61,52 @@ if( isset($_SESSION['ERRMSG_ARR']) && is_array($_SESSION['ERRMSG_ARR']) && count
 	    <tr>
 	      <td>&nbsp;</td>
 	      <td>
-	  		<span class="wrapper"><a class='link1' href="javascript:if (verify()) $('#loginForm').submit();"><em><b>Submit</b></em></a></span>
+	  		<span class="wrapper"><a class='link2' href="javascript:if (verify()) $('#loginForm').submit();"><em><b>Submit</b></em></a></span>
 	      </td>
 	    </tr>
 	  </table>
 	  <input type="hidden" id="description" name="description" value="Profile image" />
 	</form>
-</div>
 <script>
 	$(document).ready(function() {
+		$("#accounttype").change(
+				function() {
+					if ($(this).val() == "MANAGEMENT") {
+						$(".management").show();
+						$(".pincode").attr("required", true);
+						
+					} else {
+						$(".management").hide();
+						$(".pincode").attr("required", false);
+					}
+				}
+			);
+
+		$(".exclusion").click(
+				function() {
+					if ($(this).attr("checked")) {
+						$(this).parent().find(".alldaytimepicker").val("");
+						$(this).parent().find(".alldaytimepicker").attr("placeholder", "N/A");
+						$(this).parent().find(".alldaytimepicker").attr("disabled", true);
+						
+					} else {
+						$(this).parent().find(".alldaytimepicker").val("");
+						$(this).parent().find(".alldaytimepicker").attr("placeholder", "");
+						$(this).parent().find(".alldaytimepicker").attr("disabled", false);
+					}
+				}
+			);
+		
 		$(".pwd").blur(verifypassword);
 		$(".logintext").blur(checkLogin);
 		$("#email").blur(checkEmail);
 		$("#cpassword").blur(verifycpassword);
 		$("#confirmemail").blur(verifycemail);
 		$("#fname").focus();
+		$("#accounttype").trigger("change");
+		
 	});
 
-	function accounttype_onchange() {
-		if ($("#accounttype").val() == "A") {
-			$("#teamid").val("0");
-			$("#clienttype").hide();
-
-		} else {
-			$("#clienttype").show();
-		}
-	}
-				
 	function verify() {
 		var isValid = verifyStandardForm('#loginForm');
 		
@@ -154,29 +172,27 @@ if( isset($_SESSION['ERRMSG_ARR']) && is_array($_SESSION['ERRMSG_ARR']) && count
 			return false;
 		}
 		
-		callAjax(
-				"finduser.php", 
-				{ 
-					login: $(".logintext").val()
-				},
-				function(data) {
-					if (data.length > 1) {
-						$(node).addClass("invalid");
-						$(node).next().css("visibility", "visible");
-						$(node).next().attr("title", "Login is already in use.");
-						
-						returnValue = false;
-						
-					} else {
-						$(node).removeClass("invalid");
-						$(node).next().css("visibility", "hidden");
-						$(node).next().attr("title", "Required field.");
-					}
-				},
-				false
-			);
-			
-		return returnValue;
+		var bo = businessObjectToJSon({
+				classname: "UserUIClass", 
+				methodname: "loadByLogin", 
+				args: {
+					login: node.val()
+				}
+			});
+
+		if (bo.memberid != null) {
+			$(node).addClass("invalid");
+			$(node).next().css("visibility", "visible");
+			$(node).next().attr("title", "Login is already in use.");
+
+			return false;
+		}
+		
+		$(node).removeClass("invalid");
+		$(node).next().css("visibility", "hidden");
+		$(node).next().attr("title", "Required field.");
+
+		return true;
 	}
 	
 	function checkEmail() {
@@ -187,28 +203,19 @@ if( isset($_SESSION['ERRMSG_ARR']) && is_array($_SESSION['ERRMSG_ARR']) && count
 			return false;
 		}
 		
-		callAjax(
-				"findemail.php", 
-				{ 
-					email: $("#email").val()
-				},
-				function(data) {
-					if (data.length > 1) {
-						$(node).addClass("invalid");
-						$(node).next().css("visibility", "visible");
-						$(node).next().attr("title", "Email address is already in use by user " + data[0].login + "(" +  data[0].firstname  + " " + data[o].lastname + ").");
-						
-						returnValue = false;
-						
-					} else {
-						$(node).removeClass("invalid");
-						$(node).next().css("visibility", "hidden");
-						$(node).next().attr("title", "Required field.");
-					}
-				},
-				false
-			);
-			
+		var user = businessObjectToJSon({
+			classname: "UserUIClass", 
+			methodname: "loadByEmail", 
+			args: {
+				email: node.val()
+			}
+		});
+
+		if (user.memberid != null) {
+			pwAlert("Email has already been registered");
+			return false;
+		}
+		
 		return returnValue;
 	}
 	

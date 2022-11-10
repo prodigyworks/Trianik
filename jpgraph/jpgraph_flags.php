@@ -90,7 +90,7 @@ class FlagImages {
     'Republic of Estonia' => 'estn',
     'Ethiopia' => 'ethp',
     'European Union' => 'euun',
-    'British Overseas Territory of Trianik Planning Systemlkland Islands' => 'fais',
+    'British Overseas Territory of the Falkland Islands' => 'fais',
     'International Federation of Vexillological Associations' => 'fiav',
     'Republic of Fiji' => 'fiji',
     'Republic of Finland' => 'finl',

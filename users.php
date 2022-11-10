@@ -1,64 +1,85 @@
 <?php
-	require_once("crud.php");
+	require_once(__DIR__ . "/crud.php");
+	require_once(__DIR__ . "/ui/ComboUIClass.php");
+	require_once(__DIR__ . "/businessobjects/UserClass.php");
 	
 	function expire() {
-		$qry = "UPDATE {$_SESSION['DB_PREFIX']}members SET status = 'N', metamodifieddate = NOW(), metamodifieduserid = " . getLoggedOnMemberID() . " WHERE member_id = " . $_POST['expiredmemberid'];
-		$result = mysql_query($qry);
+		SessionControllerClass::getDB()->beginTransaction();
 		
-		if (! $result) {
-			logError($qry . " = " . mysql_error());
-		}
+		$user = new UserClass();
+		$user->loadRecord($_POST['expiredmemberid']);
+		$user->deactivate();
+
+		SessionControllerClass::getDB()->commit();
 	}
 	
 	function live() {
-		$qry = "UPDATE {$_SESSION['DB_PREFIX']}members SET status = 'Y', metamodifieddate = NOW(), metamodifieduserid = " . getLoggedOnMemberID() . " WHERE member_id = " . $_POST['expiredmemberid'];
-		$result = mysql_query($qry);
+		SessionControllerClass::getDB()->beginTransaction();
 		
-		if (! $result) {
-			logError($qry . " = " . mysql_error());
-		}
+		$user = new UserClass();
+		$user->loadRecord($_POST['expiredmemberid']);
+		$user->activate();
+
+		SessionControllerClass::getDB()->commit();
 	}
 	
 	class UserCrud extends Crud {
-		
-		/* Pre command event. */
-		public function preCommandEvent() {
-			if (isset($_POST['rolecmd'])) {
-				if (isset($_POST['roles'])) {
-					$counter = count($_POST['roles']);
-		
-				} else {
-					$counter = 0;
-				}
-				
-				$memberid = $_POST['memberid'];
-				$qry = "DELETE FROM {$_SESSION['DB_PREFIX']}userroles WHERE memberid = $memberid";
-				$result = mysql_query($qry);
-				
-				if (! $result) {
-					logError(mysql_error());
-				}
-		
-				for ($i = 0; $i < $counter; $i++) {
-					$roleid = $_POST['roles'][$i];
-					
-					$qry = "INSERT INTO {$_SESSION['DB_PREFIX']}userroles (memberid, roleid, metacreateddate, metacreateduserid, metamodifieddate, metamodifieduserid) VALUES ($memberid, '$roleid', NOW(), " . getLoggedOnMemberID() . ", NOW(), " .  getLoggedOnMemberID() . ")";
-					$result = mysql_query($qry);
-				};
-			}
+	
+		public function afterInsertRow() {
+?>
+			var status = rowData['status'];
+
+			if (status == "Expired") {
+				$(this).jqGrid('setRowData', rowid, false, { 'text-decoration': 'line-through', 'color': 'red' });
+		   	}
+<?php
 		}
 
+		public function postUpdateEvent($id) {
+			$user = new UserClass();
+			$user->loadRecord($id);
+			/* Update forces fullname correction. */
+			$user->updateRecord();
+		}
+		
 		/* Post header event. */
 		public function postHeaderEvent() {
 ?>
 			<script src='js/jquery.picklists.js' type='text/javascript'></script>
 			
+			<div id="pwdDialog" class="modal">
+				<table cellspacing=10>
+					<tr>
+						<td>
+							<label>New Password</label>
+						</td>
+						<td>
+							<input type="password" id="newpassword" />
+						</td>
+					</tr>
+					<tr>
+						<td>
+							<label>Confirm Password</label>
+						</td>
+						<td>
+							<input type="password" id="confirmnewpassword" />
+						</td>
+					</tr>
+				</table>
+			</div>
 			<div id="roleDialog" class="modal">
 				<form id="rolesForm" name="rolesForm" method="post">
 					<input type="hidden" id="memberid" name="memberid" />
 					<input type="hidden" id="rolecmd" name="rolecmd" value="X" />
 					<select class="listpicker" name="roles[]" multiple="true" id="roles" >
-						<?php createComboOptions("roleid", "roleid", "{$_SESSION['DB_PREFIX']}roles", "", false); ?>
+<?php 
+					    ComboUIClass::getInstance()
+						    ->setValue("roleid")
+						    ->setName("roleid")
+						    ->setTable("roles")
+						    ->setRequired(false)
+					        ->renderOptions();
+?>
 					</select>
 				</form>
 			</div>
@@ -69,9 +90,27 @@
 		public function postScriptEvent() {
 ?>
 			var currentRole = null;
+			var currentID = null;
 			
 			function fullName(node) {
 				return (node.firstname + " " + node.lastname);
+			}
+			
+			function changePassword(memberid) {
+				currentID = memberid;
+				
+				$("#pwdDialog").dialog("open");
+			}
+			
+			function checkClick(node) {
+				if (node.status != "Yes") {
+					$("#enablebutton").show();
+					$("#disablebutton").hide();
+					
+				} else {
+					$("#disablebutton").show();
+					$("#enablebutton").hide();
+				}				
 			}
 			
 			$(document).ready(function() {
@@ -81,14 +120,100 @@
 							testMode: false
 						});
 					
+					$("#pwdDialog").dialog({
+							autoOpen: false,
+							modal: true,
+							title: "Password",
+							buttons: {
+								Ok: function() {
+									if ($("#newpassword").val() != $("#confirmnewpassword").val()) {
+										pwAlert("Passwords do not match");
+										return;
+									}
+									
+									businessObjectToJSon({
+											classname: "UserUIClass", 
+											methodname: "changePassword", 
+											args: {
+												memberid: currentID,
+												password: $("#newpassword").val()
+											},
+											success: function() {
+												toastr.success("Password changed", "<?php echo SessionControllerClass::getSiteConfig()->getCompanyname(); ?>");
+												
+												$("#pwdDialog").dialog("close");
+											}
+										});
+									
+								},
+								Cancel: function() {
+									$(this).dialog("close");
+								}
+							}
+						});
+						
+					$("#pwdDialog").dialog({
+							autoOpen: false,
+							modal: true,
+							title: "Password",
+							buttons: {
+								Ok: function() {
+									if ($("#newpassword").val() != $("#confirmnewpassword").val()) {
+										pwAlert("Passwords do not match");
+										return;
+									}
+									
+									businessObjectToJSon({
+											classname: "UserUIClass", 
+											methodname: "changePassword", 
+											args: {
+												memberid: currentID,
+												password: $("#newpassword").val()
+											},
+											success: function() {
+												toastr.success("Password changed", "<?php echo SessionControllerClass::getSiteConfig()->getCompanyname(); ?>");
+												
+												$("#pwdDialog").dialog("close");
+											}
+										});
+									
+								},
+								Cancel: function() {
+									$(this).dialog("close");
+								}
+							}
+						});
+						
+						
 					$("#roleDialog").dialog({
 							autoOpen: false,
 							modal: true,
-							width: 800,
+							width: "auto",
 							title: "Roles",
 							buttons: {
-								Ok: function() {
-									$("#rolesForm").submit();
+								"Save": function() {
+									var roleArray = []; 
+									var i = 0;
+									
+									$(".listpicker option").each(
+											function(){ 
+										  		roleArray[i++] = $(this).val(); 
+											}
+										);
+										
+									businessObjectToJSon({
+											classname: "UserUIClass", 
+											methodname: "saveRoles", 
+											args: {
+												memberid: currentID,
+												roleid: roleArray
+											},
+											success: function() {
+												toastr.success("Roles saved", "<?php echo SessionControllerClass::getSiteConfig()->getCompanyname(); ?>");
+												
+												$("#roleDialog").dialog("close");
+											}
+										});
 								},
 								Cancel: function() {
 									$(this).dialog("close");
@@ -98,10 +223,36 @@
 				});
 				
 			function userRoles(memberid) {
-				getJSONData('findroleusers.php?memberid=' + memberid, "#roles", function() {
-					$("#memberid").val(memberid);
-					$("#roleDialog").dialog("open");
-				});
+				currentID = memberid;
+				
+				var node = businessObjectToJSon({
+						classname: "UserUIClass", 
+						methodname: "load", 
+						args: {
+							memberid: currentID
+						}
+					});
+					
+				$("option", ".listpicker").remove();  
+				
+				if (node.userroles != null) {
+					var options = $(".listpicker").attr("options");
+					
+					for (i = 0; i < node.userroles.length; i++) {
+						options[options.length] = new Option(
+								node.userroles[i].roleid,
+								node.userroles[i].roleid
+							);  
+					}
+				}
+				
+				$("#roleDialog").dialog("open");
+			}
+			
+			function changePassword(memberid) {
+				currentID = memberid;
+				
+				$("#pwdDialog").dialog("open");
 			}
 				
 			function expire(memberid) {
@@ -142,18 +293,53 @@
 				'title'		  => 'Live',
 				'imageurl'	  => 'images/heart.png',
 				'script' 	  => 'live'
+			),
+			array(
+				'title'		  => 'Change Password',
+				'imageurl'	  => 'images/lock.png',
+				'script' 	  => 'changePassword'
+			),
+			array(
+				'title'		  => 'Rota',
+				'imageurl'	  => 'images/checkin.png',
+				'application' => 'userrota.php'
 			)
 		);
-
+	$crud->checkconstraints = array(
+			array(
+				'table'      => 'applicationtables',
+				'column' 	 => 'memberid'
+			),
+			array(
+				'table'      => 'applicationtables',
+				'column' 	 => 'memberid'
+			),
+			array(
+				'table'      => 'errors',
+				'column' 	 => 'memberid'
+			),
+			array(
+				'table'      => 'filter',
+				'column' 	 => 'memberid'
+			),
+			array(
+				'table'      => 'loginaudit',
+				'column' 	 => 'memberid'
+			),
+			array(
+				'table'      => 'userroles',
+				'column' 	 => 'memberid'
+			)
+		);
 	$crud->allowAdd = false;
-	$crud->dialogwidth = 500;
+	$crud->dialogwidth = 950;
 	$crud->title = "Users";
 	$crud->table = "{$_SESSION['DB_PREFIX']}members";
 	
 	$crud->sql = 
 			"SELECT A.*
-			 FROM {$_SESSION['DB_PREFIX']}members A 
-			 ORDER BY A.firstname, A.lastname"; 
+			 FROM {$_SESSION['DB_PREFIX']}members A
+			 ORDER BY A.firstname, A.lastname";
 			
 	$crud->columns = array(
 			array(
@@ -168,13 +354,13 @@
 			),
 			array(
 				'name'       => 'login',
-				'length' 	 => 15,
+				'length' 	 => 30,
 				'label' 	 => 'Login ID'
 			),
 			array(
 				'name'       => 'staffname',
 				'type'		 => 'DERIVED',
-				'length' 	 => 45,
+				'length' 	 => 60,
 				'bind'		 => false,
 				'function'   => 'fullName',
 				'sortcolumn' => 'A.firstname',
@@ -182,35 +368,39 @@
 			),
 			array(
 				'name'       => 'firstname',
-				'length' 	 => 25,
+				'length' 	 => 30,
 				'showInView' => false,
 				'label' 	 => 'First Name'
 			),
 			array(
 				'name'       => 'lastname',
-				'length' 	 => 25,
+				'length' 	 => 30,
 				'showInView' => false,
 				'label' 	 => 'Last Name'
 			),
 			array(
 				'name'       => 'email',
-				'length' 	 => 50,
+				'length' 	 => 60,
 				'label' 	 => 'Email'
+			),
+			array(
+				'name'       => 'landline',
+				'length' 	 => 13,
+				'label' 	 => 'Land line'
+			),
+			array(
+				'name'       => 'fax',
+				'length' 	 => 13,
+				'label' 	 => 'Fax'
 			),
 			array(
 				'name'       => 'mobile',
 				'length' 	 => 13,
-				'label' 	 => 'Mobile'
-			),
-			array(
-				'name'       => 'holidayentitlement',
-				'length' 	 => 10,
-				'align' 	 => 'center',
-				'label' 	 => 'Entitlement'
+				'label' 	 => 'Cell phone'
 			),
 			array(
 				'name'       => 'status',
-				'length' 	 => 12,
+				'length' 	 => 30,
 				'label' 	 => 'Status',
 				'type'       => 'COMBO',
 				'options'    => array(
@@ -223,6 +413,33 @@
 							'text'		=> 'Expired'
 						)
 					)
+			),
+			array(
+				'name'       => 'imageid',
+				'type'		 => 'IMAGE',
+				'length' 	 => 64,
+				'required'	 => false,
+				'showInView' => false,
+				'label' 	 => 'Image'
+			),
+			array(
+				'name'       => 'title',
+				'length'	 => 20,
+				'label' 	 => 'Title'
+			),
+			array(
+				'name'       => 'address',
+				'type'		 => 'TEXTAREA',
+				'showInView' => false,
+				'filter'     => false,
+				'label' 	 => 'Address'
+			),
+			array(
+				'name'       => 'description',
+				'type'		 => 'TEXTAREA',
+				'showInView' => false,
+				'filter'     => false,
+				'label' 	 => 'Details'
 			),
 			array(
 				'name'       => 'passwd',
@@ -240,19 +457,6 @@
 				'label' 	 => 'Confirm Password'
 			)
 		);
-
-	$crud->subapplications = array(
-			array(
-				'title'		  => 'Documents',
-				'imageurl'	  => 'images/document.gif',
-				'script' 	  => 'editDocuments'
-			),
-			array(
-				'title'		  => 'Rota',
-				'imageurl'	  => 'images/checkin.png',
-				'application' => 'userrota.php'
-			)
-		);
-				
+		
 	$crud->run();
 ?>

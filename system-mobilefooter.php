@@ -8,8 +8,5 @@
 		</tr>
 	</table>
 </div>
-<?php
-	mysql_query("COMMIT");
-?>
 </body>
 </html>

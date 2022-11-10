@@ -1,33 +1,23 @@
 <?php
-	require_once('system-db.php');
+	require_once(__DIR__ . "/pgcore-db.php");
+	require_once(__DIR__ . "/businessobjects/MessageClass.php");
+	require_once(__DIR__ . "/ui/PageUIClass.php");
 	
-	if(!isset($_SESSION)) {
-		session_start();
-	}
-	
-	if (! isAuthenticated() && ! endsWith($_SERVER['PHP_SELF'], "system-login.php")) {
-		
-		header("location: m.system-login.php?session=" . urlencode(base64_encode($_SERVER['PHP_SELF'] . "?" . $_SERVER['QUERY_STRING'] )));
-		exit();
-	}
-	
-?>
-<?php 
-	//Include database connection details
-	require_once('system-config.php');
+	PageUIClass::loadLandingPage();
+
 	require_once("confirmdialog.php");
 ?>
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
-<title>Trianik Cleaning Services</title>
+<title><?php echo SessionControllerClass::getSiteConfig()->getCompanyname(); ?></title>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta http-equiv="X-UA-Compatible" content="IE=8" />
 <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
-<link rel="shortcut icon" href="favicon.ico">
+<link rel="shortcut icon" href="<?php echo SessionControllerClass::getSiteConfig()->getDomainurl() . "/system-imageviewer.php?id=" . SessionControllerClass::getSiteConfig()->getFaviconimageid(); ?>">
 
-<link href="css/m.style.css" rel="stylesheet" type="text/css" />
+<link href="css/m.style-06072017.css" rel="stylesheet" type="text/css" />
 <!-- 
 <link href="css/jquery-ui-1.10.3.custom.css" rel="stylesheet" type="text/css" />
  -->
@@ -41,7 +31,9 @@
 <script src="js/jquery-ui.min.js" type="text/javascript"></script>
 <script src='js/jquery.hoverIntent.minified.js' type='text/javascript'></script>
 <script src='js/jquery.dcmegamenu.1.3.3.js' type='text/javascript'></script>
-<script src="js/oraclelogs.js" language="javascript" ></script>
+<script src="js/prodigyworks-<?php echo SessionControllerClass::getSiteConfig()->getIsolanguage(); ?>-10042019.js" language="javascript" ></script>
+<script src="js/businessobject-20170130.js" language="javascript" ></script>
+<script src="js/toastr.js"></script>
 <!--[if lt IE 7]>
 <script type="text/javascript" src="js/ie_png.js"></script>
 <script type="text/javascript">
@@ -64,13 +56,10 @@
 	</form>
 		<div id="embeddedcontent">
 			<div class="embeddedpage">
-				<div class="title"><?php echo $_SESSION['title']; ?></div>
+				<div class="title"><?php echo SessionControllerClass::getPage()->getLabel(); ?></div>
 				<div class="logout">
-					<a href="system-logout.php">Log Out</a>
+					<a href="system-logout.php"><img src='images/logout.png' height=20 /></a>
 				</div>
-				<div>&nbsp;</div>
-				<div>&nbsp;</div>
 				<hr>
-				<div>&nbsp;</div>
 
 			

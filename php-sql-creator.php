@@ -500,11 +500,20 @@ if (!defined('HAVE_PHP_SQL_CREATOR')) {
             if ($parsed === false) {
                 return "";
             }
+            
             $sql = "";
-            if ($parsed['as']) {
-                $sql .= " as";
+            
+            if (isset($parsed['as'])) {
+            	 $sql .= " as";
+                
+            } else if ($parsed != null) {
+            	$sql .= " as $parsed";
             }
-            $sql .= " " . $parsed['name'];
+            
+            if (isset($parsed['name'])) {
+	            $sql .= " " . $parsed['name'];
+            }
+            
             return $sql;
         }
 
@@ -647,4 +656,3 @@ if (!defined('HAVE_PHP_SQL_CREATOR')) {
 
     define('HAVE_PHP_SQL_CREATOR', 1);
 }
-?>

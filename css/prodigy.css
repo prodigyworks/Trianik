@@ -1,0 +1,76 @@
+body {
+	margin: 0 ! important;
+	padding:0px ! important;
+	overflow: hidden ! important;
+}
+
+.entryform, .reportform {
+	margin-bottom:0px;
+	height:100%;
+}
+
+html {
+	padding:0;
+	margin: 0;
+}
+
+#main2 {
+   	position: absolute;
+    width: 100%;
+    margin:0px;
+    top: 0;
+    padding:0px;
+	bottom: 0;
+}
+
+#subheader3 {
+	padding:2px;
+}
+
+#header3 {
+	background: #F3F3F3;
+	position: absolute;
+    height: 123px;
+    top: 0;
+	font-size: 0.814em;
+    left: 0;
+    right: 0;
+    padding:0px;
+    display:block;
+}
+
+#content2 {
+	border:1px solid #CCCCCC;
+    position: absolute;
+	font-size: 0.814em;
+    top: 123px;
+    padding:0px;
+    bottom: 21px;
+    left: 0;
+    right: 0;
+    overflow-y:auto;
+    overflow-x:hidden;
+}
+
+#footer2 a {
+    text-decoration: none;
+	color: black;
+}
+
+#footer2 {
+	position: absolute;
+	opacity:0.9;
+	height: 21px;
+	font-size: 1em;
+    bottom: 0;
+    border:1px solid black;
+	background:  #CCCCCC;	
+	text-align: center;
+	vertical-align: center;
+	padding: 5px;
+	text-shadow: 2px 2px #AAAAAA;
+    left: 0;
+    right: 0;
+    text-align:center;
+    display:block;
+}

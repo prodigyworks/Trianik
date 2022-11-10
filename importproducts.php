@@ -43,19 +43,25 @@
 		        $num = count($data);
 		        $index = 0;
 		        
-		        $productcode = mysql_escape_string($data[0]);
-		        $description = mysql_escape_string($data[2]);
+		        $groupcode = mysql_escape_string($data[$index++]);
+		        $productcode = mysql_escape_string($data[$index++]);
+		        $description = mysql_escape_string($data[$index++]);
+                $estimatedcost = mysql_escape_string($data[$index++]);
+		        $mainsupplierpartnumber = mysql_escape_string($data[$index++]);
+                $rspnet = mysql_escape_string($data[$index++]);
 		        		        
 		        if ($data[0] != "") {
 		        	echo "<div>Product: $productcode</div>";
 		        	
 					$qry = "INSERT INTO {$_SESSION['DB_PREFIX']}product 
 							(
-							productcode, description
+							groupcode, productcode, description, mainsupplierpartnumber,
+							estimatedcost, rspnet
 							)  
 							VALUES  
 							(
-							'$productcode', '$description'
+							'$groupcode', '$productcode', '$description', '$mainsupplierpartnumber',
+							'$estimatedcost', '$rspnet'
 							)";
 							
 					$result = mysql_query($qry);

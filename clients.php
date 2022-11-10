@@ -2,18 +2,18 @@
 	require_once("crud.php");
 	
 	class ClientCrud extends Crud {
-		
-		/* Post header event. */
-		public function postHeaderEvent() {
-			createDocumentLink();
+		public function afterInsertRow() {
+?>
+			var status = rowData['status'];
+
+			if (status == "Inactive") {
+				$(this).jqGrid('setRowData', rowid, false, { 'text-decoration': 'line-through', 'color': 'red' });
+		   	}
+<?php
 		}
 		
 		public function postScriptEvent() {
 ?>
-			function editDocuments(node) {
-				viewDocument(node, "addclientdocument.php", node, "clientdocs", "clientid");
-			}
-			
 			function newStarterForm(node) {
 				window.open("newstarterreport.php?id=" + node);
 			}
@@ -23,6 +23,10 @@
 	
 	$crud = new ClientCrud();
 	$crud->dialogwidth = 950;
+	$crud->document = array(
+			"tablename"		=>	"clientdocs",
+			"primaryidname"	=>	"clientid"
+		);
 	$crud->title = "Client";
 	$crud->table = "{$_SESSION['DB_PREFIX']}client";
 	$crud->sql = "SELECT A.*
@@ -41,7 +45,6 @@
 				'label' 	 => 'ID'
 			),
 			array(
-				'unique'	 => true,
 				'name'       => 'name',
 				'length' 	 => 30,
 				'label' 	 => 'Name'
@@ -297,11 +300,6 @@
 		);
 
 	$crud->subapplications = array(
-			array(
-				'title'		  => 'Documents',
-				'imageurl'	  => 'images/document.gif',
-				'script' 	  => 'editDocuments'
-			),
 			array(
 				'title'		  => 'Schedule',
 				'imageurl'	  => 'images/checkin.png',

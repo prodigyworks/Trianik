@@ -1,6 +1,9 @@
 <?php
-require ('fpdf.php');
-require_once("simple_html_dom.php");
+require_once(__DIR__ . "/fpdf.php");
+require_once(__DIR__ . "/simple_html_dom.php");
+require_once(__DIR__ . "/fpdi.php");
+require_once(__DIR__ . "/SimpleImage.php");
+require_once(__DIR__ . "/businessobjects/ImageClass.php");
 
 // function hex2dec
 // returns an associative array (keys: R,G,B) from
@@ -28,7 +31,7 @@ function txtentities($html) {
 	$trans = array_flip ( $trans );
 	return strtr ( $html, $trans );
 }
-class PDFReport extends FPDF {
+class PDFReport extends FPDI {
 	// private variables
 	var $colonnes;
 	var $format;
@@ -41,14 +44,14 @@ class PDFReport extends FPDF {
 	var $issetfont;
 	var $issetcolor;
 
-	function WriteHTML($indent = 0, $indentY = 0, $html) {
+	function WriteHTML($indent = 0, $indentY = 0, $html, $rightMargin = 15) {
 		$oldmargin = $this->lMargin;
 
 		$this->SetX($indent);
 		$this->SetY($indentY);
 
 		$this->SetLeftMargin($indent);
-		$this->SetRightMargin(15);
+		$this->SetRightMargin($rightMargin);
 
 		$html = str_replace ( "&rsquo;", "'", str_replace ( "&lsquo;", "'", str_replace ( "&rdquo;", "'", str_replace ( "&ldquo;", "'", str_replace ( "&ndash;", "-", str_replace ( "&amp;", "&", str_replace ( "&lt;", "<", str_replace ( "&gt;", "<", str_replace ( "&apos;", "'", str_replace ( "&quot;", "\"", str_replace ( "&ndash;", "-", str_replace ( "&nbsp;", " ", $html ) ) ) ) ) ) ) ) ) ) )  );
 
@@ -318,13 +321,12 @@ function RoundedRect($x, $y, $w, $h, $r, $corners = '1234', $style = '')
 
 		return $buildingstr;
 	}
+	
 	function DynamicImageHeight($id, $x = null, $y = null, $w = 0, $h = 0, $type = '', $link = '') {
-		$query = mysql_query ( "SELECT mimetype, image FROM {$_SESSION['DB_PREFIX']}images WHERE id=$id" );
-		$row = mysql_fetch_array ( $query );
-		$content = $row ['image'];
-		$mimetype = $row ['mimetype'];
-
-		$name = "uploads/image_" . session_id () . "-$id." . substr ( $mimetype, strpos ( $mimetype, "/" ) + 1 );
+		$image = new ImageClass();
+		$image->loadRecord($id);
+		
+		$name = __DIR__ . "/uploads/image_" . session_id () . "-$id." . $image->getSuffix();
 
 		$f = fopen ( $name, 'wb' );
 
@@ -332,37 +334,52 @@ function RoundedRect($x, $y, $w, $h, $r, $corners = '1234', $style = '')
 			$this->Error ( 'Unable to create output file: ' . $name );
 		}
 
-		fwrite ( $f, $content );
-		fclose ( $f );
+		fwrite($f, $image->getImage());
+		fclose($f);
 
-		$newY = $this->ImageHeight ( $name, $x, $y, $w, $h, $type, $link );
+		$newY = $this->ImageHeight ($name, $x, $y, $w, $h, $type, $link);
 
-		unlink ( $name );
+		unlink ($name);
 
 		return $newY;
 	}
+	
 	function DynamicImage($id, $x = null, $y = null, $w = 0, $h = 0, $type = '', $link = '') {
-		$query = mysql_query ( "SELECT mimetype, image FROM {$_SESSION['DB_PREFIX']}images WHERE id=$id" );
-		$row = mysql_fetch_array ( $query );
-		$content = $row ['image'];
-		$mimetype = $row ['mimetype'];
+		$image = new ImageClass();
+		$image->loadRecord($id);
 
-		$name = "uploads/image_" . session_id () . "-$id." . substr ( $mimetype, strpos ( $mimetype, "/" ) + 1 );
-
-		$f = fopen ( $name, 'wb' );
-
-		if (! $f) {
-			$this->Error ( 'Unable to create image output file: ' . $name );
-		}
-
-		fwrite ( $f, $content );
-		fclose ( $f );
-
-		$newY = $this->Image ( $name, $x, $y, $w, $h, $type, $link );
-
-		unlink ( $name );
-
-		return $newY;
+   		$name = __DIR__ . "/uploads/image_$id" . "_{$image->getName()}";
+    		
+        if (file_exists($name)) {
+      		unlink($name);
+        }
+            
+   		$f = fopen ( $name, 'wb' );
+    
+   		if (! $f) {
+   			$this->Error ( 'Unable to create output file: ' . $name );
+   		}
+    
+   		fwrite ( $f, $image->getImage() );
+   		fclose ( $f );
+    		
+   		if (strlen($image->getImage()) > 50) {
+       		try {
+           		$newY = $this->Image ( $name, $x, $y, $w, $h, $type, $link );
+            
+           		unlink ( $name );
+        
+           		return $newY;
+            		
+       		} catch (Exception $e) {
+       		    $this->addText($x, $y, "Invalid image file");
+       		}
+       		
+   		} else {
+       		    $this->addText($x, $y, "Invalid image file");
+   		}
+		
+		return $y;
 	}
 
 	// public functions
@@ -387,24 +404,29 @@ function RoundedRect($x, $y, $w, $h, $r, $corners = '1234', $style = '')
 	}
 
 	// Company
-	function addHeading($x1, $y1, $heading, $value, $margin = 36, $fontSize = 7, $lineheight = 3) {
+	function addHeading($x1, $y1, $heading, $value, $margin = 36, $fontSize = 7, $lineheight = 3, $valuemargin = 0) {
 		// Positionnement en bas
-		$this->SetTextColor ( 0, 0, 100 );
-		;
+//		$this->SetTextColor ( 0, 0, 100 );
+//		;
 		$this->SetXY ( $x1, $y1 );
 		$this->SetFont ( 'Arial', 'B', $fontSize + 1 );
 		$length = $this->GetStringWidth ( $heading ) * 2;
 		$tailleTexte = $this->sizeOfText ( $heading, $length );
-		$this->MultiCell ( $length, $lineheight, $heading );
+		$this->MultiCell ( $margin, $lineheight, $heading );
 
 		$maxY = $this->GetY ();
 
-		$this->SetTextColor ( 0, 0, 0 );
-		;
+// 		$this->SetTextColor ( 0, 0, 0 );
+// 		;
 		$this->SetXY ( $x1 + $margin, $y1 );
 		$this->SetFont ( 'Arial', '', $fontSize );
 		$length = $this->GetStringWidth ( $value . " " ) * 2;
 		$tailleTexte = $this->sizeOfText ( $value, $length );
+		
+		if ($valuemargin != 0) {
+			$length = $valuemargin;
+		}
+		
 		$this->MultiCell ( $length, $lineheight, $value );
 
 		if ($this->GetY () > $maxY) {
@@ -436,20 +458,33 @@ function RoundedRect($x, $y, $w, $h, $r, $corners = '1234', $style = '')
 	}
 	function newPage() {
 	}
-	function addCols($y1, $tab) {
+	function addCols($y1, $tab, $includeLines = true, $height = null) {
 		$r1 = 10;
 		$r2 = $this->w - ($r1 * 2);
 		$y2 = $this->h - 28 - $y1;
+		
+		if ($height != null) {
+			$y2 = $height - 28 - $y1;
+		}
+		
 		$this->SetXY ( $r1, $y1 );
-		$this->Rect ( $r1, $y1, $r2, $y2, "D" );
-		$this->Line ( $r1, $y1 + 6, $r1 + $r2, $y1 + 6 );
+		
+		if ($includeLines) {
+			$this->Rect ( $r1, $y1, $r2, $y2, "D" );
+			$this->Line ( $r1, $y1 + 6, $r1 + $r2, $y1 + 6 );
+		}
+		
 		$colX = $r1;
 		$this->colonnes = $tab;
 		while ( list ( $lib, $pos ) = each ( $tab ) ) {
 			$this->SetXY ( $colX, $y1 + 2 );
 			$this->Cell ( $pos, 1, $lib, 0, 0, "C" );
+			
 			$colX += $pos;
-			$this->Line ( $colX, $y1, $colX, $y1 + $y2 );
+			
+			if ($includeLines) {
+				$this->Line ( $colX, $y1, $colX, $y1 + $y2 );
+			}
 		}
 	}
 	function addLineFormat($tab) {
@@ -469,9 +504,15 @@ function RoundedRect($x, $y, $w, $h, $r, $corners = '1234', $style = '')
 		reset ( $this->colonnes );
 		while ( list ( $lib, $pos ) = each ( $this->colonnes ) ) {
 			$longCell = $pos - 2;
-			$texte = $tab [$lib];
+			
+			if (isset($tab [$lib])) {
+				$texte = $tab [$lib];
 
-			if ($texte == null || $texte == "") {
+				if ($texte == null || $texte == "") {
+					$texte = " ";
+				}
+				
+			} else {
 				$texte = " ";
 			}
 
@@ -489,10 +530,7 @@ function RoundedRect($x, $y, $w, $h, $r, $corners = '1234', $style = '')
 	function __construct($orientation, $metric, $size) {
 		parent::__construct ( $orientation, $metric, $size );
 
-		require_once ('system-db.php');
-
-		start_db ();
-		initialise_db ();
+		require_once(__DIR__ . "/pgcore-db.php");
 
 		$this->B = 0;
 		$this->I = 0;

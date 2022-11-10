@@ -1,84 +1,9 @@
 /* TAGS */
 
-.entryformclass {
-	background: white;
-}
-
-.green-row td {
-	color: #008800 ! important;
-	font-weight: bold  ! important;
-}
-
-.yellow-row td {
-	color: yellow ! important;
-	font-weight: bold  ! important;
-}
-
-.red-row td {
-	color: red ! important;
-	font-weight: bold  ! important;
-}
-
 #divtable {
 	overflow: auto;
 	height:155px;
 	border: 1px solid #CCCCCC;
-}
-
-#orderapp {
-	background-image: url(../images/footballpitch.png);
-	height:700px;
-}
-
-#orderapp form {
-	font-weight: bold;
-	padding:20px;
-}
-
-#orderform input, #orderform select, #orderform textarea {
-	background-color: #FFFF45 !important;
-}
-
-#orderapp .title {
-	padding:5px;
-	font-size: 19px;
-	font-weight: bold;
-	font-family: cursive;
-	width: 100%;
-	text-align: center;
-}
-
-#orderform hr {
-	margin: 5px;
-}
-
-#orderform input[type='checkbox'] {
-	margin-right: 15px;
-}
-
-.checkboxcontainer {
-	margin-top: 2px;
-	margin-bottom: 3px;
-}
-
-#orderform .submitbutton {
-	padding:5px;
-	font-size:14px;
-	margin-top: 14px;
-}
-
-#orderform .header td {
-	font-style: italic;
-	font-weight: bold;
-	font-size: 10px;
-}
-
-#orderform td {
-	padding-top: 3px;
-}
-
-#orderform .favourite {
-	font-weight: bold;
 }
 
 .ui-autocomplete {
@@ -124,8 +49,6 @@ html {
 
 html, body {
     min-height: 100%;
-    padding:5px;
-    background-color: rgb(240, 240, 240);
 }
 
 #loginForm {
@@ -133,11 +56,13 @@ html, body {
 }
 
 body {
+	background: url(../images/sitebg.jpg) ;
 	font-family: Arial, Helvetica, sans-serif;
 	font-size: 100%;
 	line-height: 1em;
-	color: black;
+	color: #434343;
 	min-width: 960px;
+	border-top: 5px solid #dbdbdb;
 }
 
 object {
@@ -202,7 +127,7 @@ ul,ol {
 /* GLOBAL */
 #header,#content .row-1,#content .row-2 {
 	font-size: 0.814em;
-	width: 100%;
+	width: 1010px;
 	margin: 0 auto
 }
 
@@ -855,11 +780,13 @@ h4 {
 }
 
 .breadcrumb  {
-	float: right;
-	z-index: 600000;
+	width: 300px;
+	margin-left: 700px;
+	text-align: right;
+	z-index: 60;
+	position: absolute;
 	margin-bottom: 7px;
 	margin-top: -10px;
-	position: relative;
 	font-size: 11px;
 }
 
@@ -975,7 +902,7 @@ h4 {
 	position: absolute;
 	color: white;
 	text-align: right;
-	width: 100%;
+	width: 980px;
 	height: 20px;
 	margin-top: 29px;
 }
@@ -1153,8 +1080,8 @@ h4 {
 
 .grid>thead td,.grid tfoot td {
 	height: 20px;
-	background: url(images/ui-bg_highlight-soft_100_eeeeee_1x100.png) #dfeffc repeat-x 50% 50%;
-	color: black;
+	background: url(images/ui-bg_highlight-soft_15_cc0000_1x100.png) #dfeffc repeat-x 50% 50%;
+	color: white;
 	font-weight: bold;
 	font-size: 12px;
 	padding: 2px;
@@ -1464,13 +1391,10 @@ form label {
 	font-size: 11px ! important;
 }
 
-.ui-dialog-content {
-	background: white ! important;
-}
-
 .content {
 	background-color: white;
-	width: 100%;
+	padding: 5px;
+	width: 1000px;
 }
 
 .pad5 {
@@ -1513,6 +1437,8 @@ iframe {
 }
 
 .embeddedpage {
+	width: 100%;
+	height: 600px;
 	text-align: left;
 	background-color: #f1f1f1 ;
 }
@@ -1527,7 +1453,7 @@ iframe {
 }
 
 .menu2  {
-	width: 100%;
+	width: 1010px;
 	position: absolute;
 	float:right;
 	margin-top: -10px;
@@ -1780,10 +1706,6 @@ iframe {
 
 .composetable td {
 	padding:10px;
-}
-
-.basicform {
-	padding: 5px;
 }
 
 .reportform table td {

@@ -1185,8 +1185,11 @@ if (!defined('HAVE_PHP_SQL_PARSER')) {
             }
 
             $expr = $parseInfo['expr'];
-            $expr[] = array('expr_type' => $parseInfo['tokenType'], 'base_expr' => $parseInfo['token'],
-                            'sub_tree' => $parseInfo['processed']);
+            $expr = array();
+            $expr[] = array(
+            		'expr_type' => $parseInfo['tokenType'], 
+            		'base_expr' => $parseInfo['token'],
+                    'sub_tree' => $parseInfo['processed']);
 
             return array('processed' => false, 'expr' => $expr, 'key' => false, 'token' => false, 'tokenType' => "",
                          'prevToken' => $parseInfo['upper'], 'prevTokenType' => $parseInfo['tokenType'],
@@ -1566,4 +1569,3 @@ if (!defined('HAVE_PHP_SQL_PARSER')) {
     }
     define('HAVE_PHP_SQL_PARSER', 1);
 }
-?>

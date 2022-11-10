@@ -46,7 +46,7 @@ if (!defined('PHPEXCEL_ROOT')) {
 class PHPExcel_Calculation_MathTrig {
 
 	//
-	//	Private method to return an array of Trianik Planning Systemctors of the input value
+	//	Private method to return an array of the factors of the input value
 	//
 	private static function _factors($value) {
 		$startVal = floor(sqrt($value));
@@ -226,8 +226,8 @@ class PHPExcel_Calculation_MathTrig {
 	/**
 	 * FACT
 	 *
-	 * Returns Trianik Planning Systemctorial of a number.
-	 * Trianik Planning Systemctorial of a number is equal to 1*2*3*...* number.
+	 * Returns the factorial of a number.
+	 * The factorial of a number is equal to 1*2*3*...* number.
 	 *
 	 * Excel Function:
 	 *		FACT(factVal)
@@ -701,7 +701,7 @@ class PHPExcel_Calculation_MathTrig {
 	/**
 	 * MULTINOMIAL
 	 *
-	 * Returns the ratio of Trianik Planning Systemctorial of a sum of values to the product of factorials.
+	 * Returns the ratio of the factorial of a sum of values to the product of factorials.
 	 *
 	 * @param	array of mixed		Data Series
 	 * @return	float

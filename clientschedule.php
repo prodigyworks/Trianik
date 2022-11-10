@@ -1,136 +1,46 @@
 <?php
-	require_once("crud.php");
+	require_once(__DIR__ . "/crud.php");
+	require_once(__DIR__ . "/businessobjects/ClientscheduleClass.php");
+	require_once(__DIR__ . "/businessobjects/ClientClass.php");
 	
 	class ClientCrud extends Crud {
-		public $clientid;
-		public $weekday;
-		public $enddate;
-		public $staffid;
-		public $starttime;
-		public $endtime;
+		/**
+		 * @var ClientscheduleClass
+		 */
+		public $clientschedule;
 		
-		private function getWeekDay($weekday) {
-			if ($weekday == 0) return "Sunday";
-			if ($weekday == 1) return "Monday";
-			if ($weekday == 2) return "Tuesday";
-			if ($weekday == 3) return "Wednesday";
-			if ($weekday == 4) return "Thursday";
-			if ($weekday == 5) return "Friday";
-			if ($weekday == 6) return "Saturday";
-			
-			return "N/A";
+		public function preUpdateEvent($id) {			
+			$this->clientschedule = new ClientscheduleClass();
+			$this->clientschedule->loadRecord($id);
 		}
 		
-		public function preUpdateEvent($id) {
-			$sql = "SELECT *
-					FROM {$_SESSION['DB_PREFIX']}clientschedule A
-					WHERE id = $id";
-			$result = mysql_query($sql);
-
-			if ($result) {
-				while (($member = mysql_fetch_assoc($result))) {
-					$this->staffid = $member['memberid'];
-					$this->enddate = $member['canceldate'];
-					$this->weekday = $member['weekday'];
-					$this->starttime = $member['starttime'];
-					$this->endtime = $member['endtime'];
-				}
+		public function postInsertEvent($id) {
+			try {
+				SessionControllerClass::getDB()->beginTransaction();
+				
+				$schedule = new ClientscheduleClass();
+				$schedule->loadRecord($id);
+				$schedule->notifyCleanerIfChanged($this->clientschedule);
+				
+				SessionControllerClass::getDB()->commit();
+				
+			} catch (Exception $e) {
+				SessionControllerClass::getDB()->rollBack();
 			}
 		}
 		
-		public function postInsertEvent() {
-			$this->notifyCleaner(mysql_insert_id());
-		}
-		
 		public function postUpdateEvent($id) {
-			$this->notifyCleaner($id);
-		}
-		
-		public function notifyCleaner($id) {
-			$sql = "SELECT A.name AS clientname
-					FROM {$_SESSION['DB_PREFIX']}client A
-					WHERE id = " . $this->clientid;
-			$result = mysql_query($sql);
-
-			if ($result) {
-				while (($member = mysql_fetch_assoc($result))) {
-					$memberid = $_POST['memberid'];
-					$enddate = convertStringToDate($_POST['canceldate']);
-					
-					if ($enddate == "") {
-						$enddate = "0000-00-00";
-					}
-					
-					if ($this->weekday != $_POST['weekday'] ||
-						$this->staffid != $_POST['memberid']) {
-							
-//						logError("WEEK DAY OR STAFF CHANGED", false);
-							
-						$clientname = $member['clientname'];
-						$lines = "Shift allocated to you on " . $this->getWeekDay($_POST['weekday']) . " " . $_POST['starttime'] . "-" . $_POST['endtime'] . " for $clientname\n";
-		    			
-		    			sendUserMessage($memberid, "Work Allocation", $lines);
-					}
-	    			
-					if ($this->weekday != $_POST['weekday']) {
-//						logError("WEEK DAY CHANGED", false);
-						$sql = "DELETE FROM {$_SESSION['DB_PREFIX']}diary 
-		    					WHERE scheduleid = $id
-		    					AND status = 'U'
-		    					AND deleted != 'Y'";
-		    			$itemresult = mysql_query($sql);
-		    			
-		    			if (! $itemresult) {
-		    				logError($sql . " - " . mysql_error());
-		    			}
-		    			
-					} else if ($this->staffid != $_POST['memberid']) {
-//						logError("STAFF CHANGED", false);
-						$sql = "UPDATE {$_SESSION['DB_PREFIX']}diary 
-								SET memberid = $memberid
-		    					WHERE scheduleid = $id
-		    					AND status = 'U'
-		    					AND deleted != 'Y'";
-		    			$itemresult = mysql_query($sql);
-		    			
-		    			if (! $itemresult) {
-		    				logError($sql . " - " . mysql_error());
-		    			}
-					}
-					
-					
-					if ($this->enddate != $enddate) {
-//						logError("END DATE CHANGED: $enddate" . " - " . $this->enddate, false);
-						$sql = "DELETE FROM {$_SESSION['DB_PREFIX']}diary 
-		    					WHERE scheduleid = $id
-		    					AND starttime > '$enddate'
-		    					AND status = 'U'
-		    					AND deleted != 'Y'";
-		    			$itemresult = mysql_query($sql);
-		    			
-		    			if (! $itemresult) {
-		    				logError($sql . " - " . mysql_error());
-		    			}
-					}
-					
-					if ($this->starttime != $_POST['starttime'] || $this->endtime != $_POST['endtime']) {
-					    $starttime = $_POST['starttime'];
-					    $endtime = $_POST['endtime'];
-//						logError("STAFF CHANGED", false);
-						$sql = "UPDATE {$_SESSION['DB_PREFIX']}diary 
-								SET starttime = '$starttime',
-								endtime = '$endtime'
-		    					WHERE scheduleid = $id
-		    					AND status = 'U'
-		    					AND deleted != 'Y'";
-		    			$itemresult = mysql_query($sql);
-		    			
-		    			if (! $itemresult) {
-		    				logError($sql . " - " . mysql_error());
-		    			}
-		    			
-					} 
-				}
+			try {
+				SessionControllerClass::getDB()->beginTransaction();
+			
+				$schedule = new ClientscheduleClass();
+				$schedule->loadRecord($id);
+				$schedule->notifyCleanerIfChanged($this->clientschedule);
+				
+				SessionControllerClass::getDB()->commit();
+			
+			} catch (Exception $e) {
+				SessionControllerClass::getDB()->rollBack();
 			}
 		}
 		
@@ -142,43 +52,39 @@
 			var cleanerTime = "";
 			
 			function preDeleteScriptEvent(id) {
-				callAjax(
-					"finddata.php", 
-					{ 
-						sql: "SELECT A.memberid, A.weekday, B.name " +
-							 "FROM <?php echo $_SESSION['DB_PREFIX'];?>clientschedule A " + 
-							 "INNER JOIN <?php echo $_SESSION['DB_PREFIX'];?>client B " + 
-							 "ON B.id = A.clientid " + 
-							 "WHERE A.id = " + id
-					},
-					function(data) {
-						if (data.length > 0) {
-							cleanerID = data[0].memberid;
-							cleanerTime = data[0].weekday;
-							cleanerName = data[0].name;
-
-						} else {
-							cleanerID = 0;
+				cleanerID = 0;
+				
+				businessObjectToJSon({
+						classname: "ClientscheduleUIClass", 
+						methodname: "load", 
+						async: false,
+						args: {
+							id: id
+						},
+						success: function(data) {
+							cleanerID = data.memberid;
+							cleanerTime = data.weekday;
+							cleanerName = data.name;
 						}
-					}
-				);	
+					});
 				
 				return true;			
 			}
 			
 			function postDeleteScriptEvent(id) {
-				callAjax(
-						"scheduledelete.php", 
-						{ 
+				businessObjectToJSon({
+						classname: "DiaryUIClass", 
+						methodname: "scheduleChange", 
+						async: false,
+						args: {
 							id: id,
 							cleanerid: cleanerID,
 							clientname: cleanerName,
 							weekday: cleanerTime
 						},
-						function(data) {
-						},
-						false
-					);				
+						success: function(data) {
+						}
+					});
 			}
 		
 			function mode_onchange() {

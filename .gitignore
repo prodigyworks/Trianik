@@ -1,0 +1,9 @@
+tmp/
+.idea/*
+tmp/*
+uploads/*
+library/tinymce/uploads/*
+documents/*
+application/migration/documents/*
+*.cache
+push

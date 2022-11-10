@@ -1,3 +1,6 @@
+<?php 
+	require_once(__DIR__ . "/ui/ComboUIClass.php");
+?>
 <style>
 .entryform .bubble {
 	display: none;
@@ -8,7 +11,14 @@
 		<tr valign="center">
 			<td>Customer</td>
 			<td colspan=2>
-				<?php createLazyCombo("siteid", "id", "name", "{$_SESSION['DB_PREFIX']}customerclientsite", "", true, 80); ?>
+<?php 
+				ComboUIClass::getInstance()
+					->setId("customerid")
+					->setValue("id")
+					->setName("name")
+					->setTable("customer")
+					->render();
+?>				
 			</td>
 		</tr>
 		<tr valign="center">
@@ -38,13 +48,35 @@
 		<tr valign="center">
 			<td>Invoice Date</td>
 			<td colspan=2>
-				<input type="text" class="datepicker" id="invoicedate" name="invoicedate">
+				<input type="text" autocomplete='off' class="datepicker" id="orderdate" name="orderdate">
+			</td>
+		</tr>
+		<tr valign="center">
+			<td>Your Reference</td>
+			<td colspan=2>
+				<input type="text" style="width:260px" id="yourordernumber" name="yourordernumber">
+			</td>
+		</tr>
+		<tr valign="center">
+			<td>Paid</td>
+			<td colspan=2>
+				<SELECT id="paid" name="paid">
+					<OPTION value="N">No</OPTION>
+					<OPTION value="Y">Yes</OPTION>
+				</SELECT>
 			</td>
 		</tr>
 		<tr valign="center">
 			<td>Taken By</td>
 			<td colspan=2>
-				<?php createUserCombo("takenbyid"); ?>
+<?php 
+				ComboUIClass::getInstance()
+					->setId("takenbyid")
+					->setValue("member_id")
+					->setName("fullname")
+					->setTable("members")
+					->render();
+?>				
 			</td>
 		</tr>
 		<tr valign="center">
@@ -72,7 +104,7 @@
 	<tr>
 		<td>
 		   	<span class="wrapper">
-		   		<a disabled id="crudaddbutton" class='subapp rgap2 link1' href="javascript:addQuoteItem()">
+		   		<a disabled class='subapp rgap2 link2' href="javascript:addQuoteItem()">
 		   			<em>
 		   				<b>
 		   					<img src='images/add.png' /> Add
@@ -83,7 +115,7 @@
 		</td>
 		<td>
 		   	<span class="wrapper">
-		   		<a disabled class='subapp rgap2 link1' href="javascript:printQuote(currentCrudID)">
+		   		<a disabled class='subapp rgap2 link2' href="javascript:printQuote(currentCrudID)">
 		   			<em>
 		   				<b>
 		   					<img src='images/print.png' /> Print
@@ -113,13 +145,27 @@ function createHeader() {
 			<tr valign="center">
 				<td width='120px'>Product</td>
 				<td>
-					<?php createLazyCombo("item_productid", "id", "description", "{$_SESSION['DB_PREFIX']}product", "", true, 80); ?>
+<?php 
+					ComboUIClass::getInstance()
+						->setId("item_productid")
+						->setValue("id")
+						->setName("description")
+						->setTable("product")
+						->render();
+?>				
 				</td>
 			</tr>
 			<tr valign="center">
 				<td>Product Code</td>
 				<td>
 					<input type="text" id="item_productcode" name="item_productcode" size=19 readonly />
+					<input type="hidden" id="item_productdesc" name="item_productdesc"  />
+				</td>
+			</tr>
+			<tr valign="center">
+				<td>Description</td>
+				<td>
+					<textarea id="item_description" name="item_description" cols=80 rows=20></textarea>
 				</td>
 			</tr>
 			<tr valign="center">

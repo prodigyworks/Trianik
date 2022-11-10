@@ -1,36 +1,64 @@
 <?php
-	require_once("crud.php");
+	require_once(__DIR__ . "/crud.php");
+	require_once(__DIR__ . "/businessobjects/InvoiceClass.php");
+	require_once(__DIR__ . "/businessobjects/InvoiceitemClass.php");
 	
-	class InvoiceCrud extends Crud {
+	function acceptinvoice() {
+		$id = $_POST['invoiceid'];
+		
+		SessionControllerClass::getDB()->beginTransaction();
+		
+		$invoice = new InvoiceClass();
+		$invoice->loadRecord($id);
+		$invoice->setStatus(1);
+		$invoice->setConverteddatetime(date("Y-m-d H:i"));
+		$invoice->updateRecord();
+
+		SessionControllerClass::getDB()->commit();
+	}
+	
+	function undo() {
+		$id = $_POST['invoiceid'];
+		
+		SessionControllerClass::getDB()->beginTransaction();
+		
+		$invoice = new InvoiceClass();
+		$invoice->loadRecord($id);
+		$invoice->setStatus(0);
+		$invoice->setConverteddatetime(null);
+		$invoice->updateRecord();
+		
+		SessionControllerClass::getDB()->commit();
+	}
+	
+	class invoiceCrud extends Crud {
 		
 		/* Post header event. */
 		public function postHeaderEvent() {
+			createConfirmDialog("confirmacceptdialog", "Confirm acceptance ?", "confirmaccept");
+			createConfirmDialog("confirmundodialog", "Confirm undo ?", "confirmundo");
 			createConfirmDialog("confirmRemoveDialog", "Confirm removal ?", "confirmRemoval");
-			createDocumentLink();
 		}
 		
 		public function afterInsertRow() {
 ?>
-			var status = rowData['status'];
+			var status = rowData['paid'];
 
-			if (status == "1") {
+			if (status == "Yes") {
 				$(this).jqGrid('setRowData', rowid, false, { color: '#0000FF' });
 		   	}
 <?php
 		}
 		
 		public function postUpdateEvent($invoiceid) {
+			SessionControllerClass::getDB()->beginTransaction();
+			
 			$items = json_decode($_POST['item_serial'], true);
-			$memberid = getLoggedOnMemberID();
+			$memberid = SessionControllerClass::getUser()->getMemberid();
 			
-			$qry = "DELETE FROM {$_SESSION['DB_PREFIX']}invoiceitem 
-					WHERE invoiceid = $invoiceid";
-			
-			$result = mysql_query($qry);
-			
-			if (! $result) {
-				logError($qry . " - " . mysql_error());
-			}
+			$invoice = new InvoiceClass();
+			$invoice->loadRecord($invoiceid);
+			$invoice->deleteItems();
 			
 			foreach ($items as $k=>$item) {
 				$qty = $item['quantity'];
@@ -38,39 +66,37 @@
 				$linetotal = $item['linetotal'];
 				$vat = $item['vat'];
 				$unitprice = $item['priceeach'];
+				$description = ($item['description']);
 				$productid = $item['productid'];
-				$sequence = $item['sequence'];
 				
-				$qry = "INSERT INTO {$_SESSION['DB_PREFIX']}invoiceitem 
-						(invoiceid, sequence, quantity, priceeach, vatrate, vat, linetotal, 
-						productid, metacreateddate, metacreateduserid, metamodifieddate, metamodifieduserid) 
-						VALUES 
-						($invoiceid, $sequence, '$qty', '$unitprice', $vatrate, '$vat', $linetotal, 
-						'$productid', NOW(), $memberid , NOW(), $memberid)";
-				
-				$result = mysql_query($qry);
-				
-				if (! $result) {
-					logError($qry . " - " . mysql_error());
-				}
+				$invoiceitem = new InvoiceitemClass();
+				$invoiceitem->setInvoiceid($invoiceid);
+				$invoiceitem->setDescription($description);
+				$invoiceitem->setQuantity($qty);
+				$invoiceitem->setPriceeach($unitprice);
+				$invoiceitem->setVatrate($vatrate);
+				$invoiceitem->setVat($vat);
+				$invoiceitem->setLinetotal($linetotal);
+				$invoiceitem->setProductid($productid);
+				$invoiceitem->insertRecord();
 			}
 			
-			$sql = "UPDATE {$_SESSION['DB_PREFIX']}invoice SET
-					status = 0,
-					converteddatetime = null,
-					metacreateddate = NOW()
-					WHERE id = $invoiceid";
-			$result = mysql_query($sql);
-			
-			if (! $result) {
-				logError($sql . " - " . mysql_error());
-			}
+			$invoice->setStatus(0);
+			$invoice->setConverteddatetime(null);
+			$invoice->updateRecord();
+
+			SessionControllerClass::getDB()->commit();
 		}
 		
-		public function postInsertEvent() {
-			$invoiceid = mysql_insert_id();
+		public function postInsertEvent($invoiceid) {
+			SessionControllerClass::getDB()->beginTransaction();
+			
 			$items = json_decode($_POST['item_serial'], true);
-			$memberid = getLoggedOnMemberID();
+			$memberid = SessionControllerClass::getUser()->getMemberid();
+			
+			$invoice = new InvoiceClass();
+			$invoice->loadRecord($invoiceid);
+			$invoice->deleteItems();
 			
 			foreach ($items as $k=>$item) {
 				$qty = $item['quantity'];
@@ -79,38 +105,31 @@
 				$vat = $item['vat'];
 				$unitprice = $item['priceeach'];
 				$productid = $item['productid'];
-				$sequence = $item['sequence'];
+				$description = ($item['description']);
 				
-				$qry = "INSERT INTO {$_SESSION['DB_PREFIX']}invoiceitem 
-						(invoiceid, sequence, quantity, priceeach, vatrate, vat, linetotal, 
-						productid, metacreateddate, metacreateduserid, metamodifieddate, metamodifieduserid) 
-						VALUES 
-						($invoiceid, $sequence, '$qty', '$unitprice', $vatrate, '$vat', $linetotal, 
-						'$productid', NOW(), $memberid , NOW(), $memberid)";
-				
-				logError("SQL:$qry", false);
-				
-				$result = mysql_query($qry);
-				
-				if (! $result) {
-					logError($qry . " - " . mysql_error());
-				}
+				$invoiceitem = new InvoiceitemClass();
+				$invoiceitem->setInvoiceid($invoiceid);
+				$invoiceitem->setDescription($description);
+				$invoiceitem->setQuantity($qty);
+				$invoiceitem->setPriceeach($unitprice);
+				$invoiceitem->setVatrate($vatrate);
+				$invoiceitem->setVat($vat);
+				$invoiceitem->setLinetotal($linetotal);
+				$invoiceitem->setProductid($productid);
+				$invoiceitem->insertRecord();
 			}
 			
+			SessionControllerClass::getDB()->commit();
 		}
 		
 		public function postAddScriptEvent() {
 ?>
-			$("#customerid").val("").trigger("change");
-			$("#clientid").val("").trigger("change");
-			$("#crudaddbutton").show();
 			$("#revision").val("1");
 			$("#deliverycharge").val("0.00");
 			$("#discount").val("0.00");
 			$("#total").val("0.00");
-			$("#invoicedate").val("<?php echo date("d/m/Y"); ?>");
-			$("#takenbyid").val("<?php echo getLoggedOnMemberID(); ?>");
-			$("#invoiceitemdialog input, #invoiceitemdialog select").removeAttr("disabled");
+			$("#orderdate").val("<?php echo date("d/m/Y"); ?>");
+			$("#takenbyid").val("<?php echo SessionControllerClass::getUser()->getMemberid(); ?>");
 			itemArray = [];
 			
 			populateTable();
@@ -118,39 +137,45 @@
 		}
 		
 		public function postEditScriptEvent() {
-			$this->showInvoice(false);
-?>
-			$("#invoiceitemdialog input, #invoiceitemdialog select").removeAttr("disabled");
-			$("#crudaddbutton").show();
-<?php 			
-		}
-		
-		public function postViewScriptEvent() {
-			$this->showInvoice(true);
-?>
-			$("#invoiceitemdialog input, #invoiceitemdialog select").attr("disabled", true);
-			$("#crudaddbutton").hide();
-<?php 			
-		}
-		
-		public function showInvoice($readonly) {
 ?>
 			$("#revision").val(parseInt($("#revision").val()) + 1);
 			
-			showHeader();
-			
-			callAjax(
-					"finddata.php", 
-					{ 
-						sql: "SELECT A.*, B.description FROM <?php echo $_SESSION['DB_PREFIX'];?>invoiceitem A LEFT OUTER JOIN <?php echo $_SESSION['DB_PREFIX'];?>product B ON B.id = A.productid WHERE A.invoiceid = " + currentCrudID + " ORDER BY A.sequence"
+			businessObjectToJSon({
+					classname: "InvoiceUIClass", 
+					methodname: "load", 
+					args: {
+						id: currentCrudID
 					},
-					function(data) {
-						itemArray = data;
+					success: function(node) {
+					console.log(node);
+						var invoiceaddress = "";
+						var deliveryaddress = "";
 						
-						populateTable(data);
-					},
-					false
-				);
+						if (node.customer.deliveryaddress1 != null) deliveryaddress += node.customer.deliveryaddress1+ "\n";
+						if (node.customer.deliveryaddress2!= null) deliveryaddress += node.customer.deliveryaddress2+ "\n";
+						if (node.customer.deliveryaddress3!= null) deliveryaddress += node.customer.deliveryaddress3+ "\n";
+						if (node.customer.deliverycity!= null) deliveryaddress += node.customer.deliverycity+ "\n";
+						if (node.customer.deliverypostcode!= null) deliveryaddress += node.customer.deliverypostcode+ "\n";
+						
+						if (node.customer.invoiceaddress1!= null) invoiceaddress += node.customer.invoiceaddress1+ "\n";
+						if (node.customer.invoiceaddress2!= null) invoiceaddress += node.customer.invoiceaddress2+ "\n";
+						if (node.customer.invoiceaddress3!= null) invoiceaddress += node.customer.invoiceaddress3+ "\n";
+						if (node.customer.invoicecity!= null) invoiceaddress += node.customer.invoicecity+ "\n";
+						if (node.customer.invoicepostcode!= null) invoiceaddress += node.customer.invoicepostcode+ "\n";
+						
+						if (deliveryaddress == "") {
+							deliveryaddress = invoiceaddress;
+						}
+						
+						$("#accountcode").val(node.accountnumber);
+						$("#invoiceaddress").val(invoiceaddress);
+						$("#deliveryaddress").val(deliveryaddress);
+
+						itemArray = node.items;
+						
+						populateTable(node.items);
+					}
+				});
 <?php 
 		}
 			
@@ -164,88 +189,39 @@
 			var currentItem = -1;
 			var itemArray = [];
 			
-			function showHeader() {
-				callAjax(
-						"finddata.php", 
-						{ 
-							sql: "SELECT A.*, B.id AS clientid, B.customerid, B.invoiceaddress1, B.invoiceaddress2, " +
-								 "B.invoiceaddress3, B.invoicecity, B.invoicepostcode " +
-								 "FROM <?php echo $_SESSION['DB_PREFIX'];?>customerclientsite A " +
-								 "INNER JOIN <?php echo $_SESSION['DB_PREFIX'];?>customerclient B " +
-								 "ON B.id = A.clientid " +
-								 "WHERE A.id = " + $("#siteid").val()
-						},
-						function(data) {
-							if (data.length > 0) {
-								var node = data[0];
-								var invoiceaddress = "";
-								var deliveryaddress = "";
-								
-								if (node.deliveryaddress1 != "") deliveryaddress += node.deliveryaddress1+ "\n";
-								if (node.deliveryaddress2!= "") deliveryaddress += node.deliveryaddress2+ "\n";
-								if (node.deliveryaddress3!= "") deliveryaddress += node.deliveryaddress3+ "\n";
-								if (node.deliverycity!= "") deliveryaddress += node.deliverycity+ "\n";
-								if (node.deliverypostcode!= "") deliveryaddress += node.deliverypostcode+ "\n";
-								
-								if (node.invoiceaddress1!= "") invoiceaddress += node.invoiceaddress1+ "\n";
-								if (node.invoiceaddress2!= "") invoiceaddress += node.invoiceaddress2+ "\n";
-								if (node.invoiceaddress3!= "") invoiceaddress += node.invoiceaddress3+ "\n";
-								if (node.invoicecity!= "") invoiceaddress += node.invoicecity+ "\n";
-								if (node.invoicepostcode!= "") invoiceaddress += node.invoicepostcode+ "\n";
-								
-								if (deliveryaddress == "") {
-									deliveryaddress = invoiceaddress;
-								}
-								
-								$("#invoiceaddress").val(invoiceaddress);
-								$("#deliveryaddress").val(deliveryaddress);
-								
-								$("#customerid").val(node.customerid);
-								$("#clientid").val(node.clientid);
-							}
-						},
-						false
-					);
-			}
-			
 			function customerid_onchange() {
-				$.ajax({
-						url: "createclientcombo.php",
-						dataType: 'html',
-						async: false,
-						data: {
-							customerid: $("#customerid").val()
+				businessObjectToJSon({
+						classname: "CustomerUIClass", 
+						methodname: "load", 
+						args: {
+							id: $("#customerid").val()
 						},
-						type: "POST",
-						error: function(jqXHR, textStatus, errorThrown) {
-							alert(errorThrown);
-						},
-						success: function(data) {
-							$("#clientid").html(data).trigger("change");
+						success: function(node) {
+						console.log(node);
+							var invoiceaddress = "";
+							var deliveryaddress = "";
+							
+							if (node.deliveryaddress1 != null) deliveryaddress += node.deliveryaddress1+ "\n";
+							if (node.deliveryaddress2!= null) deliveryaddress += node.deliveryaddress2+ "\n";
+							if (node.deliveryaddress3!= null) deliveryaddress += node.deliveryaddress3+ "\n";
+							if (node.deliverycity!= null) deliveryaddress += node.deliverycity+ "\n";
+							if (node.deliverypostcode!= null) deliveryaddress += node.deliverypostcode+ "\n";
+							
+							if (node.invoiceaddress1!= null) invoiceaddress += node.invoiceaddress1+ "\n";
+							if (node.invoiceaddress2!= null) invoiceaddress += node.invoiceaddress2+ "\n";
+							if (node.invoiceaddress3!= null) invoiceaddress += node.invoiceaddress3+ "\n";
+							if (node.invoicecity!= null) invoiceaddress += node.invoicecity+ "\n";
+							if (node.invoicepostcode!= null) invoiceaddress += node.invoicepostcode+ "\n";
+							
+							if (deliveryaddress == "") {
+								deliveryaddress = invoiceaddress;
+							}
+							
+							$("#accountcode").val(node.customer.accountnumber);
+							$("#invoiceaddress").val(invoiceaddress);
+							$("#deliveryaddress").val(deliveryaddress);
 						}
 					});
-			}
-			
-			function clientid_onchange() {
-				$.ajax({
-						url: "createclientsitecombo.php",
-						dataType: 'html',
-						async: false,
-						data: {
-							clientid: $("#clientid").val()
-						},
-						type: "POST",
-						error: function(jqXHR, textStatus, errorThrown) {
-							alert(errorThrown);
-						},
-						success: function(data) {
-							$("#siteid").html(data).trigger("change");
-						}
-					});
-			}
-			
-			function siteid_onchange() {
-				showHeader();
 			}
 			
 			function total_onchange() {
@@ -275,35 +251,18 @@
 			}
 			
 			function productid_onchange() {
-				callAjax(
-						"finddata.php", 
-						{ 
-							sql: "SELECT A.rspnet, A.productcode, B.priceeach, B.qtyfrom, B.qtyto FROM <?php echo $_SESSION['DB_PREFIX'];?>product A LEFT OUTER JOIN <?php echo $_SESSION['DB_PREFIX'];?>pricebreak B ON B.productid = A.id WHERE A.id = " + $("#item_productid").val()
+				businessObjectToJSon({
+						classname: "ProductUIClass", 
+						methodname: "load", 
+						args: {
+							id: $("#item_productid").val()
 						},
-						function(data) {
-							var i;
-							
-							for (i = 0; i < data.length; i++) {
-								var node = data[i];
-								
-								if (i == 0) {
-									/* Default to unit price. */
-									$("#item_unitprice").val(new Number(node.rspnet).toFixed(2)).trigger("change");
-								}
-								
-								$("#item_productcode").val(node.productcode);
-								
-								if (node.qtyfrom != null) {
-									var qty = parseInt($("#item_quantity").val());
-									
-									if (node.qtyfrom <= qty && node.qtyto >= qty) {
-										/* Use price break. */
-										$("#item_unitprice").val(new Number(node.priceeach).toFixed(2)).trigger("change");
-									}
-								}
-							}
+						success: function(node) {
+							$("#item_productcode").val(node.productcode);
+							$("#item_productdesc").val(node.description);
+							$("#item_unitprice").val(new Number(node.rspnet).toFixed(2)).trigger("change");
 						}
-					);
+					});
 			}
 			
 			function qty_onchange(node) {
@@ -335,7 +294,7 @@
 				$("#item_linetotal").val(new Number(total).toFixed(2));
 			}
 			
-			function printInvoice(id) {
+			function printQuote(id) {
 				window.open("invoicereport.php?id=" + id);
 			}
 			
@@ -346,8 +305,8 @@
 				if (data != null) {
     				data.sort(
     						function(a, b) {
-    						    if(a.sequence < b.sequence) return -1;
-    						    if(a.sequence > b.sequence) return 1;
+    						    if(a.product.description < b.product.description) return -1;
+    						    if(a.product.description > b.product.description) return 1;
     						    
     						    return 0;
     						}
@@ -360,29 +319,10 @@
 					for (var i = 0; i < data.length; i++) {
 						var node = data[i];
 						
-						if (node.description != null) {
+						if (node.product.description != null) {
 							html += "<TR>";
-							html += "<TD>" +
-									"<img src='images/edit.png'  title='Edit item' onclick='editItem(" + i + ")' />&nbsp;" +
-									"<img src='images/delete.png'  title='Remove item' onclick='removeItem(" + i + ")' />&nbsp;";
-							
-							if (i > 0) {
-								html += "<img src='images/up.png'  title='Move up' onclick='moveUpItem(" + i + ")' />&nbsp;";
-								
-							} else {
-								html += "<img src='images/up.png'  style='visibility:hidden' />&nbsp;";
-							}
-							
-							if (i < (data.length - 1)) {
-								html += "<img src='images/down.png'  title='Move down' onclick='moveDownItem(" + i + ")' />";
-								
-							} else {
-								html += "<img src='images/down.png'  style='visibility:hidden' />&nbsp;";
-							}
-															
-							html +=
-									"</TD>";
-							html += "<TD>" + node.description + "</TD>";
+							html += "<TD><img src='images/edit.png'  title='Edit item' onclick='editItem(" + i + ")' />&nbsp;<img src='images/delete.png'  title='Remove item' onclick='removeItem(" + i + ")' /></TD>";
+							html += "<TD>" + node.product.description + "</TD>";
 							html += "<TD align=right>" + new Number(node.quantity).toFixed(0) + "</TD>";
 							html += "<TD align=right>" + new Number(node.priceeach).toFixed(2) + "</TD>";
 							html += "<TD align=right>" + new Number(node.vatrate).toFixed(2) + "</TD>";
@@ -419,30 +359,26 @@
 					return false;
 				}
 				
-				if (currentItem == -1) {
-					var lastsequence = 1;
-					
-					if (itemArray.length > 0) {
-						lastsequence = itemArray[itemArray.length - 1].sequence + 1; 
-					}
-					
-				} else {
-					lastsequence = itemArray[currentItem].sequence; 
-				}
-
 				var item = {
 						id: $("#item_id").val(),
-						sequence: lastsequence,
 						quantity: $("#item_quantity").val(),
 						priceeach: $("#item_unitprice").val(),
 						vatrate: $("#item_vatrate").val(),
 						vat: $("#item_vat").val(),
 						linetotal: $("#item_linetotal").val(),
 						productid: $("#item_productid").val(),
-						description: $("#item_productid_lazy").val()
+						product: {
+							description: $("#item_productdesc").val()
+						},
+						proddesc: $("#item_productdesc").val(),
+						description: $("#item_description").val()
 					};
-
+					
 				if (currentItem == -1) {
+					if (itemArray == null) {
+						itemArray = [];
+					}
+					
 					itemArray.push(item);
 					
 				} else {
@@ -452,26 +388,6 @@
 				populateTable(itemArray);
 				
 				return true;
-			}
-			
-			function moveUpItem(id) {
-				var sequence = itemArray[id].sequence;
-				var prevsequence = itemArray[id - 1].sequence;
-				
-				itemArray[id].sequence = prevsequence;
-				itemArray[id - 1].sequence = sequence;
-				
-				populateTable(itemArray)
-			}
-			
-			function moveDownItem(id) {
-				var sequence = itemArray[id].sequence;
-				var nextsequence = itemArray[id + 1].sequence;
-				
-				itemArray[id].sequence = nextsequence;
-				itemArray[id + 1].sequence = sequence;
-				
-				populateTable(itemArray)
 			}
 			
 			function removeItem(id) {
@@ -504,7 +420,8 @@
 			
 				$("#item_itemid").val(node.id);
 				$("#item_productid").val(node.productid).trigger("change");
-				$("#item_productid_lazy").val(node.description);
+				$("#item_description").val(node.description);
+				$("#item_productdesc").val(node.product.description);
 				$("#item_quantity").val(node.quantity);
 				$("#item_vat").val(node.vat);
 				$("#item_vatrate").val(node.vatrate);
@@ -519,9 +436,10 @@
 				
 				$("#item_itemid").val("0");
 				$("#item_productid").val("0");
-				$("#item_productid_lazy").val("");
+				$("#item_productdesc").val("");
+				$("#item_description").val("");
 				$("#item_quantity").val("1");
-				$("#item_vatrate").val("<?php echo getSiteConfigData()->vatrate; ?>");
+				$("#item_vatrate").val("<?php echo SessionControllerClass::getSiteConfig()->getVatrate(); ?>");
 				$("#item_vat").val("0.00");
 				$("#item_unitprice").val("0.00");
 				$("#item_linetotal").val("0.00");
@@ -538,8 +456,6 @@
 					function() {
 						$("#item_productid").change(productid_onchange);
 						$("#customerid").change(customerid_onchange);
-						$("#clientid").change(clientid_onchange);
-						$("#siteid").change(siteid_onchange);
 						
 						$("#invoiceitemdialog").dialog({
 								modal: true,
@@ -568,37 +484,76 @@
 				);
 
 
-			function orderReference(node) {
-				return "<?php echo getSiteConfigData()->bookingprefix; ?>" + padZero(node.orderid, 6);
-			}
-
 			function bookingReference(node) {
-				return "<?php echo getSiteConfigData()->invoiceprefix; ?>" + padZero(node.id, 6);
+				return "<?php echo "INV-"; ?>" + padZero(node.id, 6);
 			}
-
-			function editDocuments(node) {
-				viewDocument(node, "addinvoicedocument.php", node, "invoicedocs", "invoiceid");
+			
+			function accept(id) {
+				currentID = id;
+				
+				$("#confirmacceptdialog .confirmdialogbody").html("You are about to accept this invoice.<br>Are you sure ?");
+				$("#confirmacceptdialog").dialog("open");
 			}
-	
+			
+			function undo(id) {
+				currentID = id;
+				
+				$("#confirmundodialog .confirmdialogbody").html("You are about to undo this invoice.<br>Are you sure ?");
+				$("#confirmundodialog").dialog("open");
+			}
+			
+			function confirmaccept() {
+				post("editform", "acceptinvoice", "submitframe", 
+						{ 
+							invoiceid: currentID
+						}
+					);
+					
+				$("#confirmacceptdialog").dialog("close");
+			}
+			
+			function confirmundo() {
+				post("editform", "undo", "submitframe", 
+						{ 
+							invoiceid: currentID
+						}
+					);
+					
+				$("#confirmundodialog").dialog("close");
+			}
+			
+			function checkStatus(node) {
+				if (node.status == 0) {
+					$("#acceptbutton").show();
+					$("#undobutton").hide();
+					
+				} else {
+					$("#acceptbutton").hide();
+					$("#undobutton").show();
+				}
+			}
 <?php			
 		}
 	}
 	
-	$crud = new InvoiceCrud();
+	$crud = new invoiceCrud();
 	$crud->dialogwidth = 840;
 	$crud->title = "Invoices";
+	$crud->onClickCallback = "checkStatus";
 	$crud->table = "{$_SESSION['DB_PREFIX']}invoice";
-	$crud->sql = "SELECT A.*, B.name AS sitename, C.fullname AS takenbyname, D.name AS clientname, E.name AS customername
+	$crud->sql = "SELECT A.*, B.name AS customername, C.fullname AS takenbyname
 				  FROM  {$_SESSION['DB_PREFIX']}invoice A
-				  INNER JOIN  {$_SESSION['DB_PREFIX']}customerclientsite B
-				  ON B.id = A.siteid
-				  LEFT OUTER JOIN  {$_SESSION['DB_PREFIX']}members C
+				  INNER JOIN  {$_SESSION['DB_PREFIX']}customer B
+				  ON B.id = A.customerid
+				  INNER JOIN  {$_SESSION['DB_PREFIX']}members C
 				  ON C.member_id = A.takenbyid
-				  INNER JOIN  {$_SESSION['DB_PREFIX']}customerclient D
-				  ON D.id = B.clientid
-				  INNER JOIN  {$_SESSION['DB_PREFIX']}customer E
-				  ON E.id = D.customerid
 				  ORDER BY A.id DESC";
+
+	$crud->document = array(
+			"tablename"		=>	"invoicedocs",
+			"primaryidname"	=>	"quoteid"
+	);
+	
 	$crud->columns = array(
 			array(
 				'name'       => 'id',
@@ -623,28 +578,14 @@
 				'label' 	 => 'Invoice Number'
 			),
 			array(
-				'name'       => 'customername',
-				'length' 	 => 20,
-				'editable'	 => false,
-				'bind'	  	 => false,
-				'label' 	 => 'Customer'
-			),			
-			array(
-				'name'       => 'clientname',
-				'length' 	 => 20,
-				'editable'	 => false,
-				'bind'	  	 => false,
-				'label' 	 => 'Customer Client'
-			),			
-			array(
-				'name'       => 'siteid',
-				'type'       => 'LAZYDATACOMBO',
-				'length' 	 => 30,
-				'label' 	 => 'Site',
-				'table'		 => 'customerclientsite',
+				'name'       => 'customerid',
+				'type'       => 'DATACOMBO',
+				'length' 	 => 60,
+				'label' 	 => 'Customer',
+				'table'		 => 'customer',
 				'required'	 => true,
 				'table_id'	 => 'id',
-				'alias'		 => 'sitename',
+				'alias'		 => 'customername',
 				'table_name' => 'name'
 			),
 			array(
@@ -654,22 +595,46 @@
 				'label' 	 => 'Revision'
 			),			
 			array(
-				'name'       => 'invoicedate',
+				'name'       => 'orderdate',
 				'length' 	 => 12,
 				'datatype'   => 'date',
 				'label' 	 => 'Invoice Date'
 			),
 			array(
-				'name'       => 'orderref',
-				'function'   => 'orderReference',
-				'sortcolumn' => 'A.orderid',
-				'type'		 => 'DERIVED',
-				'length' 	 => 17,
-				'editable'	 => false,
-				'bind' 	 	 => false,
-				'filter'	 => false,
-				'label' 	 => 'Order Number'
+				'name'       => 'converteddatetime',
+				'length' 	 => 16,
+				'bind'		 => false,
+				'edit'		 => false,
+				'datatype'   => 'date',
+				'label' 	 => 'Conversion Date'
 			),
+			array(
+				'name'       => 'yourordernumber',
+				'length' 	 => 20,
+				'label' 	 => 'Your Order Number'
+			),			
+			array(
+				'name'       => 'paid',
+				'length' 	 => 10,
+				'label' 	 => 'Paid',
+				'type'       => 'COMBO',
+				'options'    => array(
+						array(
+							'value'		=> "Y",
+							'text'		=> 'Yes'
+						),
+						array(
+							'value'		=> "N",
+							'text'		=> 'No'
+						)
+					)
+			),			
+			array(
+				'name'       => 'status',
+				'type'		 => 'CHECKBOX',
+				'length' 	 => 10,
+				'label' 	 => 'Accepted'
+			),			
 			array(
 				'name'       => 'takenbyid',
 				'type'       => 'DATACOMBO',
@@ -704,14 +669,21 @@
 
 	$crud->subapplications = array(
 			array(
-				'title'		  => 'Documents',
-				'imageurl'	  => 'images/document.gif',
-				'script' 	  => 'editDocuments'
+				'title'		  => 'Accept',
+				'id'		  => 'acceptbutton',
+				'imageurl'	  => 'images/accept.png',
+				'script' 	  => 'accept'
+			),
+			array(
+				'title'		  => 'Undo',
+				'id'		  => 'undobutton',
+				'imageurl'	  => 'images/invalid.png',
+				'script' 	  => 'undo'
 			),
 			array(
 				'title'		  => 'Print',
 				'imageurl'	  => 'images/print.png',
-				'script' 	  => 'printInvoice'
+				'script' 	  => 'printQuote'
 			)
 		);
 		

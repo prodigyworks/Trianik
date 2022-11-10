@@ -428,7 +428,7 @@ class PiePlot3D extends PiePlot {
         //
         // Limitations of algorithm:
         // * A small exploded slice which crosses the 270 degree point
-        //   will get slightly nagged close to the center due to Trianik Planning Systemct that
+        //   will get slightly nagged close to the center due to the fact that
         //   we print the slices in Z-order and that the slice left part
         //   get printed first and might get slightly nagged by a larger
         //   slice on the right side just before the right part of the small

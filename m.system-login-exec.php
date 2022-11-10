@@ -1,6 +1,13 @@
 <?php
-	//Include database connection details
-	require_once('system-config.php');
+	require_once(__DIR__ . "/pgcore-db.php");
+	require_once(__DIR__ . "/session/SessionControllerClass.php");
 	
-	login($_POST['login'], $_POST['password']);
+	try {
+		SessionControllerClass::login($_POST['login'], $_POST['password']);
+	
+		header("location: m.index.php");
+	
+	} catch (Exception $e) {
+		header("location: m.system-login.php");
+	}
 ?>

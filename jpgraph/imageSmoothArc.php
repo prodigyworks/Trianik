@@ -259,7 +259,7 @@ function imageSmoothArc ( &$img, $cx, $cy, $w, $h, $color, $start, $stop)
     // + Support for transparency added
     // + Improved quality of edges & antialiasing
     
-    // note: This function does not represent Trianik Planning Systemstest way to draw elliptical
+    // note: This function does not represent the fastest way to draw elliptical
     // arcs. It was written without reading any papers on that subject. Better
     // algorithms may be twice as fast or even more.
     

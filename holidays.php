@@ -1,39 +1,45 @@
 <?php
-	require_once("crud.php");
-	
-	class HolidayCrud extends Crud {
-		
-		public function postAddScriptEvent() {
-			?>
+require_once(__DIR__ . "/crud.php");
+require_once(__DIR__ . "/businessobjects/HolidayAdminClass.php");
+require_once(__DIR__ . "/businessobjects/HolidayClass.php");
+require_once(__DIR__ . "/businessobjects/RoleClass.php");
+require_once(__DIR__ . "/businessobjects/UserClass.php");
+
+class HolidayCrud extends Crud {
+
+	public function postAddScriptEvent() {
+		?>
 			var myDate = new Date(); 
 			var prettyDate =
 					padZero(myDate.getDate()) + '/' +         
 				    padZero((myDate.getMonth() + 1)) + '/' + 
 					myDate.getFullYear(); 
 					 
-			$("#memberid").val("<?php echo getLoggedOnMemberID();?>").trigger("change");
 			$("#requesteddate").val(prettyDate).trigger("change");
 			$("#startdate").val(prettyDate).trigger("change");
 			$("#enddate").val(prettyDate).trigger("change");
 			$("#startdate_half").attr("checked", true).trigger("change");
 			$("#enddate_half").attr("checked", true).trigger("change");
-			<?php
+<?php
 		}
 		
 		/* Pre script event. */
 		public function preScriptEvent() {
-			?>
+?>
 			var currentID = 0;
-			<?php
+<?php
 		}
 		
-		public function postInsertEvent() {
+		public function postInsertEvent($id) {
+			$holiday = new HolidayClass();
+			$holiday->loadRecord($id);
+			$holiday->updateRecord();
 		}
 		
 		public function postHeaderEvent() {
 			createConfirmDialog("confirmapprovaldialog", "Confirm approval ?", "approve");
 			
-			?>
+?>
 				<div id="reasondialog" class="modal">
 					<label>Reason</label>
 					<textarea id="reason" name="reason" class="tinyMCE" style='width:770px; height: 300px'></textarea>
@@ -43,7 +49,7 @@
 					<br>
 					<div id="reasondiv" style='width:770px; height: 290px; border: 1px solid black'></div>
 				</div>
-			<?php
+<?php
 		}
 		
 		public function postScriptEvent() {
@@ -57,7 +63,7 @@
 							width: 810,
 							height: 420,
 							buttons: {
-								Ok: function() {
+								"Reject": function() {
 									tinyMCE.triggerSave();
 									$(this).dialog("close");
 									
@@ -81,7 +87,7 @@
 								width: 810,
 								height: 420,
 								buttons: {
-									Ok: function() {
+									"Close": function() {
 										$(this).dialog("close");
 									}
 								}
@@ -91,36 +97,26 @@
 				
 			function statusFormatter(el, cval, opts) {
 				if (el == "Rejected") {
-					return "<a style='color:red' href='javascript: viewReason(" + opts.uniqueid + ")'>" + el + "</a>";
+					return "<a style='color:blue' href='javascript: viewReason(" + opts.uniqueid + ")'>" + el + "</a>";
 				}
 				
 				return el;
 		    } 	
 				
 			function viewReason(id) {
-				callAjax(
-						"findholiday.php", 
-						{ 
-							id: id
-						},
-						function(data) {
-							if (data.length > 0) {
-								var node = data[0];
-								
-								$('#reasondiv').html(node.reason); 
-								$("#reasondivdialog").dialog("open");
-							}
-						},
-						false
-					);
+				businessObjectToJSon({
+					classname: "HolidayUIClass", 
+					methodname: "load", 
+					args: {
+						id: id
+					},
+					success: function(node) {
+						$('#reasondiv').html(node.reason); 
+						$("#reasondivdialog").dialog("open");
+					}
+				});
 			}
 				
-				
-			/* Full name callback. */
-			function fullName(node) {
-				return (node.firstname + " " + node.lastname);
-			}
-			
 			function approveHoliday(crudID) {
 				currentID = crudID;
 				
@@ -141,50 +137,21 @@
 			}
 			
 			function calculateDuration() {
-				var startDateStr = $("#startdate").val();
-				var endDateStr = $("#enddate").val();
-				
-				var startDate = new Date(startDateStr.substring(6, 10), (parseFloat(startDateStr.substring(3, 5)) - 1), startDateStr.substring(0, 2));
-				var endDate = new Date(endDateStr.substring(6, 10), (parseFloat(endDateStr.substring(3, 5)) - 1), endDateStr.substring(0, 2));
-				var days = workingDaysBetweenDates(startDate, endDate);
-				
-				callAjax(
-						"findbankholidays.php", 
-						{ 
-							startdate: startDateStr,
-							enddate: endDateStr
-						},
-						function(data) {
-							if (data.length > 0) {
-								for (var i = 0; i < data.length; i++) {
-									var node = data[i];
-									
-									var bankStartDate = new Date(node.startdate.substring(6, 10), (parseFloat(node.startdate.substring(3, 5)) - 1), node.startdate.substring(0, 2));
-									var bankEndDate = new Date(node.enddate.substring(6, 10), (parseFloat(node.enddate.substring(3, 5)) - 1), node.enddate.substring(0, 2));
-									var xdays = workingDaysBetweenDates(bankStartDate, bankEndDate);
-									
-									days -= xdays;
-								}
-							}
-						},
-						false
-					);
-				
-				if (days > 0) {
-					if ($("#startdate_half").attr("checked") == false) {
-						if (startDate.getDay() > 0 && startDate.getDay() < 6) {
-							days -= 0.5;
-						}
+				businessObjectToJSon({
+					classname: "BankholidayUIClass", 
+					methodname: "workingdays", 
+					args: {
+						startdate: dateToYMD($("#startdate").val()),
+						startdate_half: $("#startdate_half").attr("checked") ? 0 : 1,
+						enddate: dateToYMD($("#enddate").val()),
+						enddate_half: $("#enddate_half").attr("checked") ? 0 : 1
+					},
+					success: function(node) {
+						days = node.count;
+						
+						$("#daystaken").val(days);
 					}
-					
-					if ($("#enddate_half").attr("checked") == false) {
-						if (endDate.getDay() > 0 && endDate.getDay() < 6) {
-							days -= 0.5;
-						}
-					}
-				}
-				
-				$("#daystaken").val(days);
+				});
 			}
 			
 			function checkStatus(node) {
@@ -234,19 +201,66 @@
 			$this->table = "{$_SESSION['DB_PREFIX']}holiday";
 			$this->dialogwidth = 500;
 			$this->onClickCallback = "checkStatus";
-	
-			$this->sql = 
-				"SELECT A.*, " .
-				"B.holidayentitlement," .
-				"B.firstname, B.lastname, " .
-				"(SELECT SUM(D.daystaken) FROM {$_SESSION['DB_PREFIX']}holiday D WHERE YEAR(D.startdate) = YEAR(A.startdate) AND D.memberid = A.memberid) AS daysremaining " .
-				"FROM {$_SESSION['DB_PREFIX']}holiday A " .
-				"INNER JOIN {$_SESSION['DB_PREFIX']}members B " .
-				"ON B.member_id = A.memberid";
+			
+			$holidayClass = new HolidayAdminClass();
+			
+			if (! SessionControllerClass::getUser()->hasRole("ADMIN")) {
+				$memberid = SessionControllerClass::getUser()->getMemberid();
+				
+				$this->sql = 
+					"SELECT A.*, 
+					 B.holidayentitlement,
+					 B.fullname, 
+					 (
+					 	SELECT SUM(D.daystaken) 
+					 	FROM {$_SESSION['DB_PREFIX']}holiday D 
+						WHERE D.startdate >= '{$holidayClass->getStart()}'
+					  	AND   D.startdate <  '{$holidayClass->getEnd()}'
+					 	AND D.memberid = A.memberid 
+					 	AND D.acceptedby IS NOT NULL
+					 ) AS daysremaining 
+					 FROM {$_SESSION['DB_PREFIX']}holiday A 
+					 INNER JOIN {$_SESSION['DB_PREFIX']}members B 
+					 ON B.member_id = A.memberid 
+					 WHERE B.member_id = $memberid
+					 ORDER BY A.startdate DESC";
+				
+			} else {
+				$this->sql = 
+					"SELECT A.*, 
+					 B.holidayentitlement,
+					 B.fullname, 
+					 (
+					 	SELECT SUM(D.daystaken) 
+					 	FROM {$_SESSION['DB_PREFIX']}holiday D 
+						WHERE D.startdate >= '{$holidayClass->getStart()}'
+					  	AND   D.startdate <  '{$holidayClass->getEnd()}'
+					 	AND D.memberid = A.memberid 
+					 	AND D.acceptedby IS NOT NULL
+					 ) AS daysremaining 
+					 FROM {$_SESSION['DB_PREFIX']}holiday A 
+					 INNER JOIN {$_SESSION['DB_PREFIX']}members B 
+					 ON B.member_id = A.memberid
+					 ORDER BY A.startdate DESC";
+			}
 			
 			$this->messages = array(
 					array('id'		  => 'holidayid'),
 					array('id'		  => 'reasonnotes')
+				);
+			$this->subapplications = array(
+					array(
+						'id'		  => 'approvebutton',
+						'title'		  => 'Approve',
+						'imageurl'	  => 'images/approve.png',
+						'script' 	  => 'approveHoliday'
+					),
+					array(
+						'id'		  => 'rejectbutton',
+						'title'		  => 'Reject',
+						'imageurl'	  => 'images/cancel.png',
+						'script' 	  => 'rejectHoliday'
+					)
 				);
 				
 			$this->columns = array(
@@ -261,22 +275,15 @@
 						'label' 	 => 'ID'
 					),
 					array(
-						'name'       => 'requestedbyname',
-						'type'		 => 'DERIVED',
-						'length' 	 => 30,
-						'bind'		 => false,
-						'editable' 	 => false,
-						'filter'	 => false,
-						'sortcolumn' => 'B.firstname',
-						'function'   => 'fullName',
-						'label' 	 => 'Employee'
-					),
-					array(
 						'name'       => 'memberid',
-						'datatype'	 => 'user',
-						'length' 	 => 12,
-						'showInView' => false,
-						'label' 	 => 'Employee'
+						'type'       => 'DATACOMBO',
+						'length' 	 => 40,
+						'label' 	 => 'Staff Member',
+						'table'		 => 'members',
+						'required'	 => true,
+						'table_id'	 => 'member_id',
+						'alias'		 => 'fullname',
+						'table_name' => 'fullname'
 					),
 					array(
 						'name'       => 'remaining',
@@ -347,85 +354,52 @@
 						'readonly'	 => true,
 						'required'	 => false,
 						'label' 	 => 'Duration'
+					),
+					array(
+						'name'       => 'status',
+						'filter'	 => false,
+						'type'		 => 'DERIVED',
+						'length' 	 => 30,
+						'bind'		 => false,
+						'editable' 	 => false,
+						'formatter'	 => 'statusFormatter',
+						'function'   => 'statusName',
+						'label' 	 => 'Status'
 					)
 				);
 		}
 	}
 	
 	function approveHoliday() {
-		$id = $_POST['holidayid'];
-		$qry = "UPDATE {$_SESSION['DB_PREFIX']}holiday SET " .
-				"rejectedby = null, " .
-				"rejecteddate = null, " .
-				"acceptedby = " . getLoggedOnMemberID() . ", " .
-				"accepteddate = NOW() " .
-				"WHERE id = $id";
-		$result = mysql_query($qry);
-		
-		if (! $result) {
-			logError($qry . " - " . mysql_error());
-		}
-		
-		$qry = "SELECT A.memberid, " .
-				"DATE_FORMAT(A.startdate, '%d/%m/%Y') AS startdate, " .
-				"DATE_FORMAT(A.enddate, '%d/%m/%Y') AS enddate " .
-				"FROM {$_SESSION['DB_PREFIX']}holiday A " .
-				"WHERE A.id = $id";
-		$result = mysql_query($qry);
-		
-		if ($result) {
-			while (($member = mysql_fetch_assoc($result))) {
-				sendUserMessage(
-						$member['memberid'], 
-						"Holiday approved", 
-						"Holiday has been approved between " 
-						. $member['startdate'] 
-						. " and " 
-						. $member['enddate'] 
-					);
-			}
+		try {
+			SessionControllerClass::getDB()->beginTransaction();
+			
+			$holiday = new HolidayClass();
+			$holiday->loadRecord($_POST['holidayid']);
+			$holiday->approve();
+			
+			SessionControllerClass::getDB()->commit();
+				
+		} catch (Exception $e) {
+			SessionControllerClass::getDB()->rollBack();
 		}
 	}
 	
 	function rejectHoliday() {
-		$id = $_POST['holidayid'];
-		$reason = $_POST['reasonnotes'];
+		try {
+			SessionControllerClass::getDB()->beginTransaction();
+				
+			$holiday = new HolidayClass();
+			$holiday->loadRecord($_POST['holidayid']);
+			$holiday->reject($_POST['reasonnotes']);
+				
+			SessionControllerClass::getDB()->commit();
 		
-		$qry = "UPDATE {$_SESSION['DB_PREFIX']}holiday SET " .
-				"acceptedby = null, " .
-				"accepteddate = null, " .
-				"reason = '" . mysql_escape_string($reason) . "', " .
-				"rejectedby = " . getLoggedOnMemberID() . ", " .
-				"rejecteddate = NOW() " .
-				"WHERE id = $id";
-		$result = mysql_query($qry);
-		
-		if (! $result) {
-			logError($qry . " - " . mysql_error());
-		}
-		
-		$qry = "SELECT A.memberid, A.reason, " .
-				"DATE_FORMAT(A.startdate, '%d/%m/%Y') AS startdate, " .
-				"DATE_FORMAT(A.enddate, '%d/%m/%Y') AS enddate " .
-				"FROM {$_SESSION['DB_PREFIX']}holiday A " .
-				"WHERE A.id = $id";
-		$result = mysql_query($qry);
-		
-		if ($result) {
-			while (($member = mysql_fetch_assoc($result))) {
-				sendUserMessage(
-						$member['memberid'], 
-						"Holiday rejected", 
-						"Holiday has been rejected between " 
-						. $member['startdate'] 
-						. " and " 
-						. $member['enddate'] 
-						. ", reason: " . $member['reason']
-					);
-			}
+		} catch (Exception $e) {
+			SessionControllerClass::getDB()->rollBack();
 		}
 	}
-	
+
 	$crud = new HolidayCrud();
 	$crud->run();
 ?>
