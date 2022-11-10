@@ -208,7 +208,7 @@ if (!defined('HAVE_PHP_SQL_PARSER')) {
             $prev_category = "";
             $token_category = "";
             $skip_next = false;
-            $out = false;
+            $out = [];
 
             $tokenCount = count($tokens);
             for ($tokenNumber = 0; $tokenNumber < $tokenCount; ++$tokenNumber) {
