@@ -3,11 +3,11 @@
 	require_once(__DIR__ . "/pgcore-functions.php");
 	
 	if(!isset($_SESSION)) {
+        ini_set("error_log", __DIR__ . "/tmp/php-error.log");
+
 		session_start();
 	}
-	
-	
-	
+
 	error_reporting(E_STRICT);
 	
 	if (! isset($_SESSION['PRODIGYWORKS.INI'])) {
