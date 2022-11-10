@@ -59,7 +59,7 @@ class SQLProcessor extends SQLChunkProcessor {
         $prev_category = "";
         $token_category = "";
         $skip_next = 0;
-        $out = false;
+        $out = [];
 
         $tokenCount = count($tokens);
         for ($tokenNumber = 0; $tokenNumber < $tokenCount; ++$tokenNumber) {
