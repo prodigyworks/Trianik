@@ -8,7 +8,7 @@
 		session_start();
 	}
 
-	error_reporting(E_STRICT);
+	error_reporting(E_ALL);
 	
 	if (! isset($_SESSION['PRODIGYWORKS.INI'])) {
 		$_SESSION['PRODIGYWORKS.INI'] = parse_ini_file("prodigyworks.ini");
