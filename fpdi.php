@@ -115,8 +115,8 @@
                 unset($this->parsers[$filename]);
                 $this->currentFilename = $currentFilename;
                 $this->currentParser = $currentParser;
-                Logger::error($e->getMessage());
-                Logger::error($e->getTraceAsString());
+                error_log($e->getMessage());
+                error_log($e->getTraceAsString());
                 throw $e;
             }
 
