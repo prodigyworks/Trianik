@@ -44,7 +44,7 @@ class PDFReport extends FPDI {
 	var $issetfont;
 	var $issetcolor;
 
-	function WriteHTML($indent = 0, $indentY = 0, $html, $rightMargin = 15) {
+	function WriteHTML($indent = 0, $indentY = 0, $html = "", $rightMargin = 15) {
 		$oldmargin = $this->lMargin;
 
 		$this->SetX($indent);
