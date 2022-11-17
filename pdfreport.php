@@ -1,552 +1,687 @@
 <?php
-require_once(__DIR__ . "/fpdf.php");
-require_once(__DIR__ . "/simple_html_dom.php");
-require_once(__DIR__ . "/fpdi.php");
-require_once(__DIR__ . "/SimpleImage.php");
-require_once(__DIR__ . "/businessobjects/ImageClass.php");
+    require_once(__DIR__ . "/fpdf.php");
+    require_once(__DIR__ . "/simple_html_dom.php");
+    require_once(__DIR__ . "/fpdi.php");
+    require_once(__DIR__ . "/SimpleImage.php");
+    require_once(__DIR__ . "/../../application/image/businessobjects/ImageClass.php");
+
+
 
 // function hex2dec
 // returns an associative array (keys: R,G,B) from
 // a hex html code (e.g. #3FE5AA)
-function hex2dec($couleur = "#000000") {
-	$R = substr ( $couleur, 1, 2 );
-	$rouge = hexdec ( $R );
-	$V = substr ( $couleur, 3, 2 );
-	$vert = hexdec ( $V );
-	$B = substr ( $couleur, 5, 2 );
-	$bleu = hexdec ( $B );
-	$tbl_couleur = array ();
-	$tbl_couleur ['R'] = $rouge;
-	$tbl_couleur ['V'] = $vert;
-	$tbl_couleur ['B'] = $bleu;
-	return $tbl_couleur;
-}
+    function hex2dec($couleur = "#000000") {
+        $R = substr ( $couleur, 1, 2 );
+        $rouge = hexdec ( $R );
+        $V = substr ( $couleur, 3, 2 );
+        $vert = hexdec ( $V );
+        $B = substr ( $couleur, 5, 2 );
+        $bleu = hexdec ( $B );
+        $tbl_couleur = array ();
+        $tbl_couleur ['R'] = $rouge;
+        $tbl_couleur ['V'] = $vert;
+        $tbl_couleur ['B'] = $bleu;
+        return $tbl_couleur;
+    }
 
 // conversion pixel -> millimeter at 72 dpi
-function px2mm($px) {
-	return $px * 25.4 / 72;
-}
-function txtentities($html) {
-	$trans = get_html_translation_table ( HTML_ENTITIES );
-	$trans = array_flip ( $trans );
-	return strtr ( $html, $trans );
-}
-class PDFReport extends FPDI {
-	// private variables
-	var $colonnes;
-	var $format;
-	var $angle = 0;
-	var $B;
-	var $I;
-	var $U;
-	var $HREF;
-	var $fontList;
-	var $issetfont;
-	var $issetcolor;
+    function px2mm($px) {
+        return $px * 25.4 / 72;
+    }
+    function txtentities($html) {
+        $trans = get_html_translation_table ( HTML_ENTITIES );
+        $trans = array_flip ( $trans );
+        return strtr ( $html, $trans );
+    }
+    class PDFReport extends FPDI {
+        // private variables
+        var $colonnes;
+        var $format;
+        var $angle = 0;
+        var $B;
+        var $I;
+        var $U;
+        var $HREF;
+        var $fontList;
+        var $issetfont;
+        var $issetcolor;
 
-	function WriteHTML($indent = 0, $indentY = 0, $html, $rightMargin = 15) {
-		$oldmargin = $this->lMargin;
+        function GetMultiCellHeight($w, $h, $txt, $border=null, $align='J') {
+            // Calculate MultiCell with automatic or explicit line breaks height
+            // $border is un-used, but I kept it in the parameters to keep the call
+            //   to this function consistent with MultiCell()
+            $cw = &$this->CurrentFont['cw'];
+            if($w==0)
+                $w = $this->w-$this->rMargin-$this->x;
+            $wmax = ($w-2*$this->cMargin)*1000/$this->FontSize;
+            $s = str_replace("\r",'',$txt);
+            $nb = strlen($s);
+            if($nb>0 && $s[$nb-1]=="\n")
+                $nb--;
+            $sep = -1;
+            $i = 0;
+            $j = 0;
+            $l = 0;
+            $ns = 0;
+            $height = 0;
+            while($i<$nb)
+            {
+                // Get next character
+                $c = $s[$i];
+                if($c=="\n")
+                {
+                    // Explicit line break
+                    if($this->ws>0)
+                    {
+                        $this->ws = 0;
+                        $this->_out('0 Tw');
+                    }
+                    //Increase Height
+                    $height += $h;
+                    $i++;
+                    $sep = -1;
+                    $j = $i;
+                    $l = 0;
+                    $ns = 0;
+                    continue;
+                }
+                if($c==' ')
+                {
+                    $sep = $i;
+                    $ls = $l;
+                    $ns++;
+                }
+                $l += $cw[$c];
+                if($l>$wmax)
+                {
+                    // Automatic line break
+                    if($sep==-1)
+                    {
+                        if($i==$j)
+                            $i++;
+                        if($this->ws>0)
+                        {
+                            $this->ws = 0;
+                            $this->_out('0 Tw');
+                        }
+                        //Increase Height
+                        $height += $h;
+                    }
+                    else
+                    {
+                        if($align=='J')
+                        {
+                            $this->ws = ($ns>1) ? ($wmax-$ls)/1000*$this->FontSize/($ns-1) : 0;
+                            $this->_out(sprintf('%.3F Tw',$this->ws*$this->k));
+                        }
+                        //Increase Height
+                        $height += $h;
+                        $i = $sep+1;
+                    }
+                    $sep = -1;
+                    $j = $i;
+                    $l = 0;
+                    $ns = 0;
+                }
+                else
+                    $i++;
+            }
+            // Last chunk
+            if($this->ws>0)
+            {
+                $this->ws = 0;
+                $this->_out('0 Tw');
+            }
+            //Increase Height
+            $height += $h;
 
-		$this->SetX($indent);
-		$this->SetY($indentY);
+            return $height;
+        }
 
-		$this->SetLeftMargin($indent);
-		$this->SetRightMargin($rightMargin);
+        function WriteHTML($indent = 0, $indentY = 0, $html = "", $rightMargin = 15) {
+            $oldmargin = $this->lMargin;
 
-		$html = str_replace ( "&rsquo;", "'", str_replace ( "&lsquo;", "'", str_replace ( "&rdquo;", "'", str_replace ( "&ldquo;", "'", str_replace ( "&ndash;", "-", str_replace ( "&amp;", "&", str_replace ( "&lt;", "<", str_replace ( "&gt;", "<", str_replace ( "&apos;", "'", str_replace ( "&quot;", "\"", str_replace ( "&ndash;", "-", str_replace ( "&nbsp;", " ", $html ) ) ) ) ) ) ) ) ) ) )  );
+            $this->SetX($indent);
+            $this->SetY($indentY);
 
-		// HTML parser
-		$html = strip_tags ( $html, "<b><u><i><a><ul><li><img><p><br><h1><h2><h3><h4><h5><h6><h7><strong><em><font><tr><blockquote>" ); // supprime tous les tags sauf ceux reconnus
-		$html = str_replace ( "\n", ' ', $html ); // remplace retour � la ligne par un espace
-		$a = preg_split ( '/<(.*)>/U', $html, - 1, PREG_SPLIT_DELIM_CAPTURE ); // �clate la cha�ne avec les balises
+            $this->SetLeftMargin($indent);
+            $this->SetRightMargin($rightMargin);
 
-		foreach ( $a as $i => $e ) {
-			if ($i % 2 == 0) {
-				// Text
-				if ($this->HREF)
-					$this->PutLink ( $this->HREF, $e );
-				else
-					$this->Write ( 4, stripslashes ( txtentities ( $e ) ) );
-			} else {
-				// Tag
-				if ($e [0] == '/')
-					$this->CloseTag ( strtoupper ( substr ( $e, 1 ) ) );
-				else {
-					// Extract attributes
-					$a2 = explode ( ' ', $e );
-					$tag = strtoupper ( array_shift ( $a2 ) );
-					$attr = array ();
-					foreach ( $a2 as $v ) {
-						if (preg_match ( '/([^=]*)=["\']?([^"\']*)/', $v, $a3 ))
-							$attr [strtoupper ( $a3 [1] )] = $a3 [2];
-					}
-					$this->OpenTag ( $tag, $attr );
-				}
-			}
-		}
+            $html = str_replace ( "&rsquo;", "'", str_replace ( "&lsquo;", "'", str_replace ( "&rdquo;", "'", str_replace ( "&ldquo;", "'", str_replace ( "&ndash;", "-", str_replace ( "&amp;", "&", str_replace ( "&lt;", "<", str_replace ( "&gt;", "<", str_replace ( "&apos;", "'", str_replace ( "&quot;", "\"", str_replace ( "&ndash;", "-", str_replace ( "&nbsp;", " ", $html ) ) ) ) ) ) ) ) ) ) )  );
 
-		$this->SetLeftMargin($oldmargin);
+            // HTML parser
+            $html = strip_tags ( $html, "<b><u><i><a><ul><li><img><p><br><h1><h2><h3><h4><h5><h6><h7><strong><em><font><tr><blockquote>" ); // supprime tous les tags sauf ceux reconnus
+            $html = str_replace ( "\n", ' ', $html ); // remplace retour � la ligne par un espace
+            $html = str_replace ( "&pound;", '�', $html ); // remplace retour � la ligne par un espace
+            $a = preg_split ( '/<(.*)>/U', $html, - 1, PREG_SPLIT_DELIM_CAPTURE ); // �clate la cha�ne avec les balises
 
-		return $this->GetY() + 8;
-	}
-	
-function RoundedRect($x, $y, $w, $h, $r, $corners = '1234', $style = '')
-    {
-        $k = $this->k;
-        $hp = $this->h;
-        if($style=='F')
-            $op='f';
-        elseif($style=='FD' || $style=='DF')
-            $op='B';
-        else
-            $op='S';
-        $MyArc = 4/3 * (sqrt(2) - 1);
-        $this->_out(sprintf('%.2F %.2F m',($x+$r)*$k,($hp-$y)*$k ));
+            foreach ( $a as $i => $e ) {
+                if ($i % 2 == 0) {
+                    // Text
+                    if ($this->HREF)
+                        $this->PutLink ( $this->HREF, $e );
+                    else
+                        $this->Write ( 4, stripslashes 	( str_replace('�',chr(163),txtentities ( $e ))) );
+                } else {
+                    // Tag
+                    if ($e [0] == '/')
+                        $this->CloseTag ( strtoupper ( substr ( $e, 1 ) ) );
+                    else {
+                        // Extract attributes
+                        $a2 = explode ( ' ', $e );
+                        $tag = strtoupper ( array_shift ( $a2 ) );
+                        $attr = array ();
+                        foreach ( $a2 as $v ) {
+                            if (preg_match ( '/([^=]*)=["\']?([^"\']*)/', $v, $a3 ))
+                                $attr [strtoupper ( $a3 [1] )] = $a3 [2];
+                        }
+                        $this->OpenTag ( $tag, $attr );
+                    }
+                }
+            }
 
-        $xc = $x+$w-$r;
-        $yc = $y+$r;
-        $this->_out(sprintf('%.2F %.2F l', $xc*$k,($hp-$y)*$k ));
-        if (strpos($corners, '2')===false)
-            $this->_out(sprintf('%.2F %.2F l', ($x+$w)*$k,($hp-$y)*$k ));
-        else
-            $this->_Arc($xc + $r*$MyArc, $yc - $r, $xc + $r, $yc - $r*$MyArc, $xc + $r, $yc);
+            $this->SetLeftMargin($oldmargin);
 
-        $xc = $x+$w-$r;
-        $yc = $y+$h-$r;
-        $this->_out(sprintf('%.2F %.2F l',($x+$w)*$k,($hp-$yc)*$k));
-        if (strpos($corners, '3')===false)
-            $this->_out(sprintf('%.2F %.2F l',($x+$w)*$k,($hp-($y+$h))*$k));
-        else
-            $this->_Arc($xc + $r, $yc + $r*$MyArc, $xc + $r*$MyArc, $yc + $r, $xc, $yc + $r);
+            return $this->GetY() + 8;
+        }
 
-        $xc = $x+$r;
-        $yc = $y+$h-$r;
-        $this->_out(sprintf('%.2F %.2F l',$xc*$k,($hp-($y+$h))*$k));
-        if (strpos($corners, '4')===false)
-            $this->_out(sprintf('%.2F %.2F l',($x)*$k,($hp-($y+$h))*$k));
-        else
-            $this->_Arc($xc - $r*$MyArc, $yc + $r, $xc - $r, $yc + $r*$MyArc, $xc - $r, $yc);
-
-        $xc = $x+$r ;
-        $yc = $y+$r;
-        $this->_out(sprintf('%.2F %.2F l',($x)*$k,($hp-$yc)*$k ));
-        if (strpos($corners, '1')===false)
+        function RoundedRect($x, $y, $w, $h, $r, $corners = '1234', $style = '')
         {
-            $this->_out(sprintf('%.2F %.2F l',($x)*$k,($hp-$y)*$k ));
-            $this->_out(sprintf('%.2F %.2F l',($x+$r)*$k,($hp-$y)*$k ));
+            $k = $this->k;
+            $hp = $this->h;
+            if($style=='F')
+                $op='f';
+            elseif($style=='FD' || $style=='DF')
+                $op='B';
+            else
+                $op='S';
+            $MyArc = 4/3 * (sqrt(2) - 1);
+            $this->_out(sprintf('%.2F %.2F m',($x+$r)*$k,($hp-$y)*$k ));
+
+            $xc = $x+$w-$r;
+            $yc = $y+$r;
+            $this->_out(sprintf('%.2F %.2F l', $xc*$k,($hp-$y)*$k ));
+            if (strpos($corners, '2')===false)
+                $this->_out(sprintf('%.2F %.2F l', ($x+$w)*$k,($hp-$y)*$k ));
+            else
+                $this->_Arc($xc + $r*$MyArc, $yc - $r, $xc + $r, $yc - $r*$MyArc, $xc + $r, $yc);
+
+            $xc = $x+$w-$r;
+            $yc = $y+$h-$r;
+            $this->_out(sprintf('%.2F %.2F l',($x+$w)*$k,($hp-$yc)*$k));
+            if (strpos($corners, '3')===false)
+                $this->_out(sprintf('%.2F %.2F l',($x+$w)*$k,($hp-($y+$h))*$k));
+            else
+                $this->_Arc($xc + $r, $yc + $r*$MyArc, $xc + $r*$MyArc, $yc + $r, $xc, $yc + $r);
+
+            $xc = $x+$r;
+            $yc = $y+$h-$r;
+            $this->_out(sprintf('%.2F %.2F l',$xc*$k,($hp-($y+$h))*$k));
+            if (strpos($corners, '4')===false)
+                $this->_out(sprintf('%.2F %.2F l',($x)*$k,($hp-($y+$h))*$k));
+            else
+                $this->_Arc($xc - $r*$MyArc, $yc + $r, $xc - $r, $yc + $r*$MyArc, $xc - $r, $yc);
+
+            $xc = $x+$r ;
+            $yc = $y+$r;
+            $this->_out(sprintf('%.2F %.2F l',($x)*$k,($hp-$yc)*$k ));
+            if (strpos($corners, '1')===false)
+            {
+                $this->_out(sprintf('%.2F %.2F l',($x)*$k,($hp-$y)*$k ));
+                $this->_out(sprintf('%.2F %.2F l',($x+$r)*$k,($hp-$y)*$k ));
+            }
+            else
+                $this->_Arc($xc - $r, $yc - $r*$MyArc, $xc - $r*$MyArc, $yc - $r, $xc, $yc - $r);
+            $this->_out($op);
         }
-        else
-            $this->_Arc($xc - $r, $yc - $r*$MyArc, $xc - $r*$MyArc, $yc - $r, $xc, $yc - $r);
-        $this->_out($op);
-    }
 
-    function _Arc($x1, $y1, $x2, $y2, $x3, $y3)
-    {
-        $h = $this->h;
-        $this->_out(sprintf('%.2F %.2F %.2F %.2F %.2F %.2F c ', $x1*$this->k, ($h-$y1)*$this->k,
-            $x2*$this->k, ($h-$y2)*$this->k, $x3*$this->k, ($h-$y3)*$this->k));
-    }
-
-	function OpenTag($tag, $attr) {
-		// Opening tag
-		switch ($tag) {
-			case 'STRONG' :
-				$this->SetStyle ( 'B', true );
-				break;
-			case 'EM' :
-				$this->SetStyle ( 'I', true );
-				break;
-			case 'UL' :
-				break;
-			case 'LI' :
-				$this->SetFont ( 'Arial', '', 9 );
-				$this->Ln ( 1 );
-				$this->Write ( 4, "o   " );
-				$this->SetLeftMargin($this->lMargin + 5);
-				break;
-			case 'B' :
-			case 'I' :
-			case 'U' :
-				$this->SetStyle ( $tag, true );
-				break;
-			case 'A' :
-				$this->HREF = $attr ['HREF'];
-				break;
-			case 'IMG' :
-				if (isset ( $attr ['SRC'] ) && (isset ( $attr ['WIDTH'] ) || isset ( $attr ['HEIGHT'] ))) {
-					if (! isset ( $attr ['WIDTH'] ))
-						$attr ['WIDTH'] = 0;
-					if (! isset ( $attr ['HEIGHT'] ))
-						$attr ['HEIGHT'] = 0;
-					$this->Image ( $attr ['SRC'], $this->GetX (), $this->GetY (), px2mm ( $attr ['WIDTH'] ), px2mm ( $attr ['HEIGHT'] ) );
-				}
-				break;
-			case 'TR' :
-			case 'BLOCKQUOTE' :
-			case 'BR' :
-				$this->Ln ( 5 );
-				break;
-			case 'H1':
-				$this->Ln ( 5 );
-				$this->SetFont ( 'Arial', 'B', 20 );
-				break;
-			case 'H2':
-				$this->Ln ( 5 );
-				$this->SetFont ( 'Arial', 'B', 18 );
-				break;
-			case 'H3':
-				$this->Ln ( 5 );
-				$this->SetFont ( 'Arial', 'B', 16 );
-				break;
-			case 'H4':
-				$this->Ln ( 5 );
-				$this->SetFont ( 'Arial', 'B', 14 );
-				break;
-			case 'H5':
-				$this->Ln ( 5 );
-				$this->SetFont ( 'Arial', 'B', 12 );
-				break;
-			case 'H6':
-				$this->Ln ( 5 );
-				$this->SetFont ( 'Arial', 'B', 10 );
-				break;
-			case 'H7':
-				$this->Ln ( 5 );
-				$this->SetFont ( 'Arial', 'B', 9 );
-				break;
-			case 'P' :
-				$this->SetFont ( 'Arial', '', 9 );
-				$this->Ln ( 3 );
-				break;
-			case 'FONT' :
-				if (isset ( $attr ['COLOR'] ) && $attr ['COLOR'] != '') {
-					$coul = hex2dec ( $attr ['COLOR'] );
-					$this->SetTextColor ( $coul ['R'], $coul ['V'], $coul ['B'] );
-					$this->issetcolor = true;
-				}
-				if (isset ( $attr ['FACE'] ) && in_array ( strtolower ( $attr ['FACE'] ), $this->fontlist )) {
-					$this->SetFont ( strtolower ( $attr ['FACE'] ) );
-					$this->issetfont = true;
-				}
-				break;
-		}
-	}
-
-	function CloseTag($tag) {
-		// Closing tag
-		if ($tag == 'STRONG')
-			$tag = 'B';
-		if ($tag == 'EM')
-			$tag = 'I';
-
-		if ($tag == 'B' || $tag == 'I' || $tag == 'U')
-			$this->SetStyle ( $tag, false );
-
-		if ($tag == 'A')
-			$this->HREF = '';
-
-		if ($tag == 'FONT') {
-			if ($this->issetcolor == true) {
-				$this->SetTextColor ( 0 );
-			}
-
-			if ($this->issetfont) {
-				$this->SetFont ( 'arial' );
-				$this->issetfont = false;
-			}
-		}
-
-		if ($tag == 'LI') {
-			$this->SetLeftMargin($this->lMargin - 5);
-			$this->Ln(3);
-
-		} else if ($tag == 'P') {
-			$this->Ln(3);
-
-		} else if ($tag == 'H1' || $tag == 'H2' || $tag == 'H3' || $tag == 'H4' || $tag == 'H5' || $tag == 'H6' || $tag == 'H7') {
-			$this->Ln(5);
-		}
-	}
-
-	function SetStyle($tag, $enable) {
-		// Modify style and select corresponding font
-		$this->$tag += ($enable ? 1 : - 1);
-		$style = '';
-		foreach ( array (
-				'B',
-				'I',
-				'U'
-		) as $s ) {
-			if ($this->$s > 0)
-				$style .= $s;
-		}
-		$this->SetFont ( '', $style );
-	}
-	function PutLink($URL, $txt) {
-		// Put a hyperlink
-		$this->SetTextColor ( 0, 0, 255 );
-		$this->SetStyle ( 'U', true );
-		$this->Write ( 4, $txt, $URL );
-		$this->SetStyle ( 'U', false );
-		$this->SetTextColor ( 0 );
-	}
-
-	function stripHTML($html) {
-		$txt = str_get_html ( "<html>" . $html . "</html>" )->plaintext;
-		$txt = str_replace ( "&ndash;", "-", str_replace ( "&amp;", "&", str_replace ( "&lt;", "<", str_replace ( "&gt;", "<", str_replace ( "&ndash;", "-", str_replace ( "&nbsp;", " ", $txt ) ) ) ) ) );
-
-		$buildingarr = array ();
-		$buildingstr = "";
-
-		$strings = explode ( " ", $txt );
-
-		foreach ( $strings as $str ) {
-			if ($buildingstr != "") {
-				$buildingstr .= " " . $str;
-			} else {
-				$buildingstr = $str;
-			}
-		}
-
-		$buildingarr [] = $buildingstr;
-		$buildingstr = "";
-
-		foreach ( $buildingarr as $str ) {
-			if ($buildingstr != "") {
-				$buildingstr .= "\n" . $str;
-			} else {
-				$buildingstr = $str;
-			}
-		}
-
-		return $buildingstr;
-	}
-	
-	function DynamicImageHeight($id, $x = null, $y = null, $w = 0, $h = 0, $type = '', $link = '') {
-		$image = new ImageClass();
-		$image->loadRecord($id);
-		
-		$name = __DIR__ . "/uploads/image_" . session_id () . "-$id." . $image->getSuffix();
-
-		$f = fopen ( $name, 'wb' );
-
-		if (! $f) {
-			$this->Error ( 'Unable to create output file: ' . $name );
-		}
-
-		fwrite($f, $image->getImage());
-		fclose($f);
-
-		$newY = $this->ImageHeight ($name, $x, $y, $w, $h, $type, $link);
-
-		unlink ($name);
-
-		return $newY;
-	}
-	
-	function DynamicImage($id, $x = null, $y = null, $w = 0, $h = 0, $type = '', $link = '') {
-		$image = new ImageClass();
-		$image->loadRecord($id);
-
-   		$name = __DIR__ . "/uploads/image_$id" . "_{$image->getName()}";
-    		
-        if (file_exists($name)) {
-      		unlink($name);
+        function _Arc($x1, $y1, $x2, $y2, $x3, $y3)
+        {
+            $h = $this->h;
+            $this->_out(sprintf('%.2F %.2F %.2F %.2F %.2F %.2F c ', $x1*$this->k, ($h-$y1)*$this->k,
+                $x2*$this->k, ($h-$y2)*$this->k, $x3*$this->k, ($h-$y3)*$this->k));
         }
-            
-   		$f = fopen ( $name, 'wb' );
-    
-   		if (! $f) {
-   			$this->Error ( 'Unable to create output file: ' . $name );
-   		}
-    
-   		fwrite ( $f, $image->getImage() );
-   		fclose ( $f );
-    		
-   		if (strlen($image->getImage()) > 50) {
-       		try {
-           		$newY = $this->Image ( $name, $x, $y, $w, $h, $type, $link );
-            
-           		unlink ( $name );
-        
-           		return $newY;
-            		
-       		} catch (Exception $e) {
-       		    $this->addText($x, $y, "Invalid image file");
-       		}
-       		
-   		} else {
-       		    $this->addText($x, $y, "Invalid image file");
-   		}
-		
-		return $y;
-	}
 
-	// public functions
-	function sizeOfText($texte, $largeur) {
-		$index = 0;
-		$nb_lines = 0;
-		$loop = TRUE;
-		while ( $loop ) {
-			$pos = strpos ( $texte, "\n" );
-			if (! $pos) {
-				$loop = FALSE;
-				$ligne = $texte;
-			} else {
-				$ligne = substr ( $texte, $index, $pos );
-				$texte = substr ( $texte, $pos + 1 );
-			}
-			$length = floor ( $this->GetStringWidth ( $ligne ) );
-			$res = 1 + floor ( $length / $largeur );
-			$nb_lines += $res;
-		}
-		return $nb_lines;
-	}
+        function OpenTag($tag, $attr) {
+            // Opening tag
+            switch ($tag) {
+                case 'STRONG' :
+                    $this->SetStyle ( 'B', true );
+                    break;
+                case 'EM' :
+                    $this->SetStyle ( 'I', true );
+                    break;
+                case 'UL' :
+                    break;
+                case 'LI' :
+                    $this->SetFont ( 'Arial', '', 9 );
+                    $this->Ln ( 1 );
+                    $this->Write ( 4, "o   " );
+                    $this->SetLeftMargin($this->lMargin + 5);
+                    break;
+                case 'B' :
+                case 'I' :
+                case 'U' :
+                    $this->SetStyle ( $tag, true );
+                    break;
+                case 'A' :
+                    $this->HREF = $attr ['HREF'];
+                    break;
+                case 'IMG' :
+                    if (isset ( $attr ['SRC'] ) && (isset ( $attr ['WIDTH'] ) || isset ( $attr ['HEIGHT'] ))) {
+                        if (! isset ( $attr ['WIDTH'] ))
+                            $attr ['WIDTH'] = 0;
+                        if (! isset ( $attr ['HEIGHT'] ))
+                            $attr ['HEIGHT'] = 0;
+                        $this->Image ( $attr ['SRC'], $this->GetX (), $this->GetY (), px2mm ( $attr ['WIDTH'] ), px2mm ( $attr ['HEIGHT'] ) );
+                    }
+                    break;
+                case 'TR' :
+                case 'BLOCKQUOTE' :
+                case 'BR' :
+                    $this->Ln ( 5 );
+                    break;
+                case 'H1':
+                    $this->Ln ( 5 );
+                    $this->SetFont ( 'Arial', 'B', 20 );
+                    break;
+                case 'H2':
+                    $this->Ln ( 5 );
+                    $this->SetFont ( 'Arial', 'B', 18 );
+                    break;
+                case 'H3':
+                    $this->Ln ( 5 );
+                    $this->SetFont ( 'Arial', 'B', 16 );
+                    break;
+                case 'H4':
+                    $this->Ln ( 5 );
+                    $this->SetFont ( 'Arial', 'B', 14 );
+                    break;
+                case 'H5':
+                    $this->Ln ( 5 );
+                    $this->SetFont ( 'Arial', 'B', 12 );
+                    break;
+                case 'H6':
+                    $this->Ln ( 5 );
+                    $this->SetFont ( 'Arial', 'B', 10 );
+                    break;
+                case 'H7':
+                    $this->Ln ( 5 );
+                    $this->SetFont ( 'Arial', 'B', 9 );
+                    break;
+                case 'P' :
+                    $this->SetFont ( 'Arial', '', 9 );
+                    $this->Ln ( 3 );
+                    break;
+                case 'FONT' :
+                    if (isset ( $attr ['COLOR'] ) && $attr ['COLOR'] != '') {
+                        $coul = hex2dec ( $attr ['COLOR'] );
+                        $this->SetTextColor ( $coul ['R'], $coul ['V'], $coul ['B'] );
+                        $this->issetcolor = true;
+                    }
+                    if (isset ( $attr ['FACE'] ) && in_array ( strtolower ( $attr ['FACE'] ), $this->fontlist )) {
+                        $this->SetFont ( strtolower ( $attr ['FACE'] ) );
+                        $this->issetfont = true;
+                    }
+                    break;
+            }
+        }
 
-	// Company
-	function addHeading($x1, $y1, $heading, $value, $margin = 36, $fontSize = 7, $lineheight = 3, $valuemargin = 0) {
-		// Positionnement en bas
+        function CloseTag($tag) {
+            // Closing tag
+            if ($tag == 'STRONG')
+                $tag = 'B';
+            if ($tag == 'EM')
+                $tag = 'I';
+
+            if ($tag == 'B' || $tag == 'I' || $tag == 'U')
+                $this->SetStyle ( $tag, false );
+
+            if ($tag == 'A')
+                $this->HREF = '';
+
+            if ($tag == 'FONT') {
+                if ($this->issetcolor == true) {
+                    $this->SetTextColor ( 0 );
+                }
+
+                if ($this->issetfont) {
+                    $this->SetFont ( 'arial' );
+                    $this->issetfont = false;
+                }
+            }
+
+            if ($tag == 'LI') {
+                $this->SetLeftMargin($this->lMargin - 5);
+                $this->Ln(3);
+
+            } else if ($tag == 'P') {
+                $this->Ln(3);
+
+            } else if ($tag == 'H1' || $tag == 'H2' || $tag == 'H3' || $tag == 'H4' || $tag == 'H5' || $tag == 'H6' || $tag == 'H7') {
+                $this->Ln(5);
+            }
+        }
+
+        function SetStyle($tag, $enable) {
+            // Modify style and select corresponding font
+            $this->$tag += ($enable ? 1 : - 1);
+            $style = '';
+            foreach ( array (
+                          'B',
+                          'I',
+                          'U'
+                      ) as $s ) {
+                if ($this->$s > 0)
+                    $style .= $s;
+            }
+            $this->SetFont ( '', $style );
+        }
+        function PutLink($URL, $txt) {
+            // Put a hyperlink
+            $this->SetTextColor ( 0, 0, 255 );
+            $this->SetStyle ( 'U', true );
+            $this->Write ( 4, $txt, $URL );
+            $this->SetStyle ( 'U', false );
+            $this->SetTextColor ( 0 );
+        }
+
+        function stripHTML($html) {
+            $txt = str_get_html ( "<html>" . $html . "</html>" )->plaintext;
+            $txt = str_replace ( "&ndash;", "-", str_replace ( "&amp;", "&", str_replace ( "&lt;", "<", str_replace ( "&gt;", "<", str_replace ( "&ndash;", "-", str_replace ( "&nbsp;", " ", $txt ) ) ) ) ) );
+
+            $buildingarr = array ();
+            $buildingstr = "";
+
+            $strings = explode ( " ", $txt );
+
+            foreach ( $strings as $str ) {
+                if ($buildingstr != "") {
+                    $buildingstr .= " " . $str;
+                } else {
+                    $buildingstr = $str;
+                }
+            }
+
+            $buildingarr [] = $buildingstr;
+            $buildingstr = "";
+
+            foreach ( $buildingarr as $str ) {
+                if ($buildingstr != "") {
+                    $buildingstr .= "\n" . $str;
+                } else {
+                    $buildingstr = $str;
+                }
+            }
+
+            return $buildingstr;
+        }
+
+        function DynamicImageHeight($id, $x = null, $y = null, $w = 0, $h = 0, $type = '', $link = '') {
+            $image = new ImageClass();
+            $image->loadRecord($id);
+
+            $name = __DIR__ . "/../../uploads/image_" . session_id () . "-$id." . $image->getSuffix();
+
+            $f = fopen ( $name, 'wb' );
+
+            if (! $f) {
+                $this->Error ( 'Unable to create output file: ' . $name );
+            }
+
+            fwrite($f, $image->getImage());
+            fclose($f);
+
+            $newY = $this->ImageHeight ($name, $x, $y, $w, $h, $type, $link);
+
+            unlink ($name);
+
+            return $newY;
+        }
+
+        function DynamicImage($id, $x = null, $y = null, $w = 0, $h = 0, $type = '', $link = '') {
+            if ($id == null) {
+                $x = new Exception();
+                error_log("Empty image");
+                error_log($x->getTraceAsString());
+                $this->Error ( 'Empty image');
+            }
+
+            $image = new ImageClass();
+            $image->loadRecord($id);
+
+            $name = $image->getDownloadfilename();
+
+            if (file_exists($name)) {
+//      		unlink($name);
+            }
+
+            $f = fopen ( $name, 'wb' );
+
+            if (! $f) {
+                $this->Error ( 'Unable to create output file: ' . $name );
+            }
+
+            fwrite ( $f, $image->getImage() );
+            fclose ( $f );
+
+            if (strlen($image->getImage()) > 50) {
+                try {
+                    $newY = $this->Image ( $name, $x, $y, $w, $h, $type, $link );
+
+//           		unlink ( $name );
+
+                    return $newY;
+
+                } catch (Exception $e) {
+                    $this->addText($x, $y, "Invalid image file");
+                }
+
+            } else {
+                $this->addText($x, $y, "Invalid image file");
+            }
+
+            return $y;
+        }
+
+        // public functions
+        function sizeOfText($texte, $largeur) {
+            $index = 0;
+            $nb_lines = 0;
+            $loop = TRUE;
+            while ( $loop ) {
+                $pos = strpos ( $texte, "\n" );
+                if (! $pos) {
+                    $loop = FALSE;
+                    $ligne = $texte;
+                } else {
+                    $ligne = substr ( $texte, $index, $pos );
+                    $texte = substr ( $texte, $pos + 1 );
+                }
+                $length = floor ( $this->GetStringWidth ( $ligne ) );
+                $res = 1 + floor ( $length / $largeur );
+                $nb_lines += $res;
+            }
+            return $nb_lines;
+        }
+
+        // Company
+        function addHeading($x1, $y1, $heading, $value, $margin = 36, $fontSize = 7, $lineheight = 3, $valuemargin = 0) {
+            // Positionnement en bas
 //		$this->SetTextColor ( 0, 0, 100 );
 //		;
-		$this->SetXY ( $x1, $y1 );
-		$this->SetFont ( 'Arial', 'B', $fontSize + 1 );
-		$length = $this->GetStringWidth ( $heading ) * 2;
-		$tailleTexte = $this->sizeOfText ( $heading, $length );
-		$this->MultiCell ( $margin, $lineheight, $heading );
+            $this->SetXY ( $x1, $y1 );
+            $this->SetFont ( 'Arial', 'B', $fontSize + 1 );
+            $length = $this->GetStringWidth ( $heading ) * 2;
+            $tailleTexte = $this->sizeOfText ( $heading, $length );
+            $this->MultiCell ( $margin, $lineheight, $heading );
 
-		$maxY = $this->GetY ();
+            $maxY = $this->GetY ();
 
 // 		$this->SetTextColor ( 0, 0, 0 );
 // 		;
-		$this->SetXY ( $x1 + $margin, $y1 );
-		$this->SetFont ( 'Arial', '', $fontSize );
-		$length = $this->GetStringWidth ( $value . " " ) * 2;
-		$tailleTexte = $this->sizeOfText ( $value, $length );
-		
-		if ($valuemargin != 0) {
-			$length = $valuemargin;
-		}
-		
-		$this->MultiCell ( $length, $lineheight, $value );
+            $this->SetXY ( $x1 + $margin, $y1 );
+            $this->SetFont ( 'Arial', '', $fontSize );
+            $length = $this->GetStringWidth ( $value . " " ) * 2;
+            $tailleTexte = $this->sizeOfText ( $value, $length );
 
-		if ($this->GetY () > $maxY) {
-			$maxY = $this->GetY ();
-		}
+            if ($valuemargin != 0) {
+                $length = $valuemargin;
+            }
 
-		return $maxY;
-	}
-	function addText($x1, $y1, $heading, $fontSize = 7, $lineheight = 3, $style = '', $width = 0) {
-		if ($heading == null || trim ( $heading ) == "") {
-			$heading = " ";
-		}
+            $this->MultiCell ( $length, $lineheight, $value );
 
-		// Positionnement en bas
-		$this->SetXY ( $x1, $y1 );
-		$this->SetFont ( 'Arial', $style, $fontSize );
+            if ($this->GetY () > $maxY) {
+                $maxY = $this->GetY ();
+            }
 
-		if ($width != 0) {
-			$length = $width;
-		} else {
-			$length = $this->GetStringWidth ( $heading ) * 2;
-		}
+            return $maxY;
+        }
 
-		$before = $this->GetY ();
 
-		$this->MultiCell ( $length, $lineheight, $heading );
 
-		return $this->GetY ();
-	}
-	function newPage() {
-	}
-	function addCols($y1, $tab, $includeLines = true, $height = null) {
-		$r1 = 10;
-		$r2 = $this->w - ($r1 * 2);
-		$y2 = $this->h - 28 - $y1;
-		
-		if ($height != null) {
-			$y2 = $height - 28 - $y1;
-		}
-		
-		$this->SetXY ( $r1, $y1 );
-		
-		if ($includeLines) {
-			$this->Rect ( $r1, $y1, $r2, $y2, "D" );
-			$this->Line ( $r1, $y1 + 6, $r1 + $r2, $y1 + 6 );
-		}
-		
-		$colX = $r1;
-		$this->colonnes = $tab;
+        function centerText($y, $heading, $fontSize = 7, $lineheight = 3, $style = '', $width = 0, $fontName = 'Arial') {
+            $this->SetFont ( $fontName, $style, $fontSize );
+            $this->SetY($y);
+            $this->MultiCell($this->w - ($this->lMargin + $this->rMargin),$lineheight, $heading ,0,'C');
+        }
 
-        foreach ($tab as $lib => $pos) {
-			$this->SetXY ( $colX, $y1 + 2 );
-			$this->Cell ( $pos, 1, $lib, 0, 0, "C" );
-			
-			$colX += $pos;
-			
-			if ($includeLines) {
-				$this->Line ( $colX, $y1, $colX, $y1 + $y2 );
-			}
-		}
-	}
-	function addLineFormat($tab) {
-		global $format;
+        function addText($x1, $y1, $heading, $fontSize = 7, $lineheight = 3, $style = '', $width = 0, $fontName = 'Arial') {
+            // Positionnement en bas
+            $this->SetXY ( $x1, $y1 );
+            $this->SetFont ( $fontName, $style, $fontSize );
 
-        foreach ($this->colonnes as $lib => $pos) {
-			if (isset ( $tab ["$lib"] ))
-				$format [$lib] = $tab ["$lib"];
-		}
-	}
-	function addLine($ligne, $tab, $lineheight = 4) {
-		global $format;
+            if ($width != 0) {
+                $length = $width;
+            } else {
+                $length = $this->GetStringWidth ( $heading ?? "" ) * 2;
+            }
 
-		$ordonnee = 10;
-		$maxSize = $ligne;
+            $before = $this->GetY ();
 
-        reset ( $this->colonnes );
-        foreach ($this->colonnes as $lib => $pos) {
-			$longCell = $pos - 2;
-			
-			if (isset($tab [$lib])) {
-				$texte = $tab [$lib];
+            $this->MultiCell ( $length, $lineheight, $heading ?? "" );
 
-				if ($texte == null || $texte == "") {
-					$texte = " ";
-				}
-				
-			} else {
-				$texte = " ";
-			}
+            return $this->GetY ();
+        }
 
-			$length = $this->GetStringWidth ( $texte );
-			$tailleTexte = $this->sizeOfText ( $texte, $length );
-			$formText = $format [$lib];
-			$this->SetXY ( $ordonnee, $ligne - 1 );
-			$this->MultiCell ( $longCell, $lineheight, $texte, 0, $formText );
-			if ($maxSize < ($this->GetY ()))
-				$maxSize = $this->GetY ();
-			$ordonnee += $pos;
-		}
-		return ($maxSize - $ligne);
-	}
-	function __construct($orientation, $metric, $size) {
-		parent::__construct ( $orientation, $metric, $size );
+        function newPage() {
+        }
 
-		require_once(__DIR__ . "/pgcore-db.php");
+        function addCols($y1, $tab, $includeLines = true, $bmargin = 28) {
+            $r1 = 10;
+            $r2 = $this->w - ($r1 * 2);
+            $y2 = $this->h - $bmargin - $y1;
+            $this->SetXY ( $r1, $y1 );
 
-		$this->B = 0;
-		$this->I = 0;
-		$this->U = 0;
-		$this->HREF = '';
-		$this->fontlist = array (
-				'arial',
-				'times',
-				'courier',
-				'helvetica',
-				'symbol'
-		);
-		$this->issetfont = false;
-		$this->issetcolor = false;
-	}
-}
+            if ($includeLines) {
+                $this->Rect ( $r1, $y1, $r2, $y2, "D" );
+                $this->Line ( $r1, $y1 + 6, $r1 + $r2, $y1 + 6 );
+            }
 
-?>
+            $colX = $r1;
+            $this->colonnes = $tab;
+
+
+            foreach ($tab as $lib => $pos) {
+                $this->SetXY ( $colX, $y1 + 2 );
+                $this->Cell ( $pos, 1, $lib, 0, 0, "C" );
+
+                $colX += $pos;
+
+                if ($includeLines) {
+                    $this->Line ( $colX, $y1, $colX, $y1 + $y2 );
+                }
+            }
+// 		while ( list ( $lib, $pos ) = each ( $tab ) ) {
+// 			$this->SetXY ( $colX, $y1 + 2 );
+// 			$this->Cell ( $pos, 1, $lib, 0, 0, "C" );
+
+// 			$colX += $pos;
+
+// 			if ($includeLines) {
+// 				$this->Line ( $colX, $y1, $colX, $y1 + $y2 );
+// 			}
+// 		}
+        }
+        function addLineFormat($tab) {
+            global $format;
+
+            foreach ($this->colonnes as $lib => $pos) {
+// 		while ( list ( $lib, $pos ) = each ( $this->colonnes ) ) {
+                if (isset ( $tab ["$lib"] ))
+                    $format [$lib] = $tab ["$lib"];
+            }
+        }
+        function addLine($ligne, $tab, $lineheight = 4) {
+            global $format;
+
+            $ordonnee = 10;
+            $maxSize = $ligne;
+            $firstcolumn = true;
+
+            reset ( $this->colonnes );
+            foreach ($this->colonnes as $lib => $pos) {
+// 		while ( list ( $lib, $pos ) = each ( $this->colonnes ) ) {
+                $longCell = $pos - 2;
+
+                if (isset($tab [$lib])) {
+                    $texte = $tab [$lib];
+
+                    if ($texte === "") {
+                        $texte = " ";
+                    }
+
+                } else {
+                    $texte = " ";
+                }
+
+                $length = $this->GetStringWidth ( $texte );
+                $tailleTexte = $this->sizeOfText ( $texte, $length );
+                $formText = $format [$lib];
+
+                if (! $firstcolumn) {
+                    if ($this->GetY() < $ligne) {
+                        $ligne = $this->GetY() - $lineheight + 1;
+                    }
+
+                } else {
+                    $firstcolumn = true;
+                }
+
+                $this->SetXY ( $ordonnee, $ligne - 1 );
+                $this->MultiCell ( $longCell, $lineheight, $texte, 0, $formText );
+                if ($maxSize < ($this->GetY ()))
+                    $maxSize = $this->GetY ();
+                $ordonnee += $pos;
+            }
+            return ($maxSize - $ligne);
+        }
+        function __construct($orientation, $metric, $size) {
+            parent::__construct ( $orientation, $metric, $size );
+
+            require_once(__DIR__ . "/../../library/core/pgcore-db.php");
+
+            register_shutdown_function(function() {
+                $error = error_get_last();
+
+                if ($error !== NULL && $error['type'] === E_ERROR) {
+                    error_log("Report " . get_class($this) . " failed with : {$error['message']}");
+                    header('HTTP/1.0 500 ' . $error['message']);
+                }
+            });
+
+            $this->B = 0;
+            $this->I = 0;
+            $this->U = 0;
+            $this->HREF = '';
+            $this->fontlist = array (
+                'arial',
+                'times',
+                'courier',
+                'helvetica',
+                'symbol'
+            );
+            $this->issetfont = false;
+            $this->issetcolor = false;
+        }
+    }
