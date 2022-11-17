@@ -25,6 +25,7 @@
 			$this->AddPage();
 			
 			try {
+                /*
 				$client = new ClientClass();
 				$client->loadRecord($id);
 				
@@ -258,7 +259,7 @@
 				$this->addText( 180, 276, "Y", 8, 3, '');
 				
 				$this->SetTextColor(0, 0, 0);
-				
+				*/
 				/************************ Page 2 *********************/
 /*
 				$this->AddPage();
