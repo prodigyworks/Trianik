@@ -809,23 +809,7 @@ function networkdays($s, $e, $holidays = array()) {
 }
 
 function logError($description, $kill = true) {
-	if ($kill) {
-		mysql_query("ROLLBACK");
-	}
-	
-	if (isset($_SESSION['pageid'])) {
-		$pageid = $_SESSION['pageid'];
-		
-	} else {
-		$pageid = 1;
-	}
-	
-	$qry = "INSERT INTO {$_SESSION['DB_PREFIX']}errors (pageid, memberid, description, metacreateddate, metacreateduserid, metamodifieddate, metamodifieduserid) VALUES ($pageid, " . getLoggedOnMemberID() . ", '" . trim($description) . "', NOW(), " . getLoggedOnMemberID() . ", NOW(), " .  getLoggedOnMemberID() . ")";
-	$result = mysql_query($qry);
-	
-	if ($kill) {
-		die($description);
-	}
+    error_log($description);
 }
 
 function convertStringToDate($str) {
