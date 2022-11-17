@@ -1,9 +1,8 @@
 <?php
 	require_once(__DIR__ . "/pgcore-db.php");
-	require_once(__DIR__ . "/businessobjects/ClientClass.php");
 	require_once(__DIR__ . "/pdfreport.php");
-	require_once(__DIR__ . "/simple_html_dom.php");
-	
+    require_once(__DIR__ . "/businessobjects/ClientClass.php");
+
 	class NewStarterReport extends PDFReport {
 		
 		function AddPage($orientation = '', $format = '', $rotationOrKeepmargins = false, $tocpage = false) {
