@@ -529,6 +529,8 @@ function RoundedRect($x, $y, $w, $h, $r, $corners = '1234', $style = '')
 		return ($maxSize - $ligne);
 	}
 	function __construct($orientation, $metric, $size) {
+		parent::__construct ( $orientation, $metric, $size );
+
 		require_once(__DIR__ . "/pgcore-db.php");
 
 		$this->B = 0;
