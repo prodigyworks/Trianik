@@ -18,8 +18,6 @@
 		}
 		
 		function __construct($orientation, $metric, $size, $id) {
-			$dynamicY = 0;
-			
 	        parent::__construct($orientation, $metric, $size);
 	        
 	        $this->SetAutoPageBreak(true, 5);
@@ -137,7 +135,7 @@
 				$this->addText( 173, 23, $client->getKeycodes(), 10, 4, '');
 				
 				$this->addText( 10, 38, "Address", 10, 4, '');
-				$this->addText( 50, 30, $client->getAddress(), 10, 4, '');
+				$this->addText( 50, 30, $client->getAddress(), 10, 4);
 				
 				$this->addText( 10, 63, "Billing Address If Different", 10, 4, '', 29);
 				$this->addText( 50, 57, $client->getBillingaddress(), 10, 4, '');

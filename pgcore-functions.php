@@ -131,12 +131,7 @@ EOD;
 	}
 	
 	function logError($description, $kill = true) {
-		if ($kill) {
-			SessionControllerClass::error($description);
-			
-		} else {
-			SessionControllerClass::debug($description);
-		}
+        error_log($description);
 	}
 	
 	function convertStringToDate($str) {

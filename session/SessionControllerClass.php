@@ -41,15 +41,7 @@
 		 * @param string $description
 		 */
 		public static function error($description) {
-			if (SessionControllerClass::getDB()->inTransaction()) {
-				SessionControllerClass::getDB()->rollBack();
-			}
-			
-			SessionControllerClass::getDB()->beginTransaction();
-			SessionControllerClass::debug($description);
-			SessionControllerClass::getDB()->commit();
-		    
-			die($description);
+            error_log($description);
     	}
 		
 		/**
@@ -57,11 +49,7 @@
 		 * @param string $description
 		 */
 		public static function debug($description) {
-			$error = new ErrorsClass(true);
-			$error->setPageid(SessionControllerClass::getPage()->getId());
-			$error->setMemberid(SessionControllerClass::getUser()->getMemberid());
-			$error->setDescription($description);
-			$error->insertRecord();
+            error_log($description);
     	}
 
     	/**
