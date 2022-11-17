@@ -10,11 +10,11 @@
 			parent::AddPage($orientation, $format, $rotationOrKeepmargins, $tocpage);
 			
 			$this->addText( 10, 13, SessionControllerClass::getSiteConfig()->getCompanyname() . " Starter Form", 12, 4, 'B');
-						
-			$this->DynamicImage(SessionControllerClass::getSiteConfig()->getLogoimageid(), 178.6, 1, 30);
-			$this->addText( 40, 288, "Trianik Cleaners Ltd - Starter Forms revised August 2015 - Mrs N M Saunders - Managing Director TCL", 8, 4, '');
-			$this->Rect(5, 21, 200, 259);
-			$this->Line(48, 21, 48, 279.9);
+//
+//			$this->DynamicImage(SessionControllerClass::getSiteConfig()->getLogoimageid(), 178.6, 1, 30);
+//			$this->addText( 40, 288, "Trianik Cleaners Ltd - Starter Forms revised August 2015 - Mrs N M Saunders - Managing Director TCL", 8, 4, '');
+//			$this->Rect(5, 21, 200, 259);
+//			$this->Line(48, 21, 48, 279.9);
 		}
 		
 		function __construct($orientation, $metric, $size, $id) {
