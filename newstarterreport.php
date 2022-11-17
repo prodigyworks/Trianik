@@ -1,7 +1,7 @@
 <?php
 	require_once(__DIR__ . "/pgcore-db.php");
-	require_once(__DIR__ . "/pdfreport.php");
     require_once(__DIR__ . "/businessobjects/ClientClass.php");
+	require_once(__DIR__ . "/pdfreport.php");
 
 	class NewStarterReport extends PDFReport {
 		
