@@ -27,7 +27,7 @@
 		 * @param int $enddate
 		 * @return string
 		 */
-		public function workingdays($startdate, $startdate_half, $enddate, $enddate_half) {
+		public function workingdays(string $startdate, string $startdate_half, string $enddate, string $enddate_half): string {
 			$days = HolidayAdminClass::weekDays($startdate, $enddate);
 			$bankholiday = new BankholidayCollectionClass();
 			$bankholiday->loadByDateRange($startdate, $enddate);
@@ -47,4 +47,3 @@
 			return json_encode(array("count" => $days));
 		}
 	}
-?>

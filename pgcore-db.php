@@ -27,4 +27,3 @@
 			
 		date_default_timezone_set(SessionControllerClass::getSiteConfig()->getTimezone());
 	}
-?>

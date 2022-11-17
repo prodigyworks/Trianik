@@ -1,90 +1,49 @@
 <?php
-	require_once(__DIR__ . "/crud.php");
-	require_once(__DIR__ . "/businessobjects/ErrorClass.php");
-
-	function clearAllErrors() {
-		SessionControllerClass::getDB()->beginTransaction();
-		
-		ErrorsClass::clear();
-		
-		SessionControllerClass::getDB()->commit();
-		
-	}
-	
-	class ErrorCrud extends Crud {
-		
-		public function postScriptEvent() {
+    require_once(__DIR__ . "/../../../application/template/web/system-header.php");
+    require_once(__DIR__ . "/../../../library/tinymce/tinymce.php");
+    require_once(__DIR__ . "/../../../library/core/ui/ComboUIClass.php");
 ?>
-			function clearErrors(id) {
-				post("editform", "clearAllErrors", "submitframe", {});
-			}
-<?php			
-		}
-	}
+    <style>
+        #errors {
+            width:100%;
+        }
+    </style>
+    <div class='scroller portlet'>
+        <h4 class='portletheader'><?php echo SessionControllerClass::getPage()->getLabel(); ?></h4>
+        <div class='gridboundary'>
+            <div id="errors">
+                <?php
+                    if (file_exists(__DIR__ . "/tmp/php-error.log")) {
+                        echo str_replace("\n", "<br>", file_get_contents(__DIR__ . "/../../../tmp/php-error.log"));
 
-	$crud = new ErrorCrud();
-	$crud->allowAdd = false;
-	$crud->allowEdit = false;
-	$crud->title = "Errors";
-	$crud->table = "{$_SESSION['DB_PREFIX']}errors";
-	$crud->dialogwidth = 900;
-	$crud->sql = 
-			"SELECT A.*, B.label, C.fullname
-			 FROM {$_SESSION['DB_PREFIX']}errors A 
-			 INNER JOIN {$_SESSION['DB_PREFIX']}pages B 
-			 ON B.pageid = A.pageid 
-			 LEFT OUTER	 JOIN {$_SESSION['DB_PREFIX']}members C 
-			 ON C.member_id = A.memberid 
-			 ORDER BY A.id DESC";
-	
-	$crud->columns = array(
-			array(
-				'name'       => 'id',
-				'length' 	 => 6,
-				'pk'		 => true,
-				'showInView' => false,
-				'editable'	 => false,
-				'bind' 	 	 => false,
-				'label' 	 => 'ID'
-			),
-			array(
-				'name'       => 'pageid',
-				'length' 	 => 6,
-				'showInView' => false,
-				'editable'	 => false,
-				'bind' 	 	 => false,
-				'label' 	 => 'Page ID'
-			),
-			array(
-				'name'       => 'createddate',
-				'length' 	 => 12,
-				'bind'		 => false,
-				'label' 	 => 'Created Date'
-			),
-			array(
-				'name'       => 'label',
-				'length' 	 => 60,
-				'label' 	 => 'Page'
-			),
-			array(
-				'name'       => 'fullname',
-				'length' 	 => 60,
-				'label' 	 => 'User'
-			),
-			array(
-				'name'       => 'description',
-				'showInView' => false,
-				'type'		 => 'TEXTAREA',
-				'label' 	 => 'Error'
-			)
-		);
-	$crud->applications = array(
-			array(
-				'title'		  => 'Clear',
-				'imageurl'	  => 'images/minimize.gif',
-				'script' 	  => 'clearErrors'
-			)
-		);
-		
-	$crud->run();
-?>
+                    } else {
+                        echo "No errors found";
+                    }
+                ?>
+            </div>
+        </div>
+        <button id="clearbutton" class="link3 pad5"><img alt="Clear" src="<?php echo ImageClass::staticURL("clear.png"); ?>" /> Clear</button>
+    </div>
+    <script>
+        $(document).ready(
+            function() {
+                $("#clearbutton").click(
+                    function() {
+                        businessObjectToJSon({
+                            domain: "<?php echo SessionControllerClass::getSiteConfig()->getDomainurl(); ?>",
+                            classname: "AdminUIClass",
+                            path: "application/admin/ui",
+                            methodname: "clearErrorLog",
+                            success: function() {
+                                toastr.success("Errors cleaned", "<?php echo SessionControllerClass::getSiteConfig()->getCompanyname(); ?>");
+
+                                $("#errors").html("No errors found");
+                            }
+                        });
+                    }
+                )
+            }
+        )
+    </script>
+<?php
+    require_once(__DIR__ . "/../../../application/template/web/system-footer.php");
