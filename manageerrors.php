@@ -1,7 +1,5 @@
 <?php
-    require_once(__DIR__ . "/../../../application/template/web/system-header.php");
-    require_once(__DIR__ . "/../../../library/tinymce/tinymce.php");
-    require_once(__DIR__ . "/../../../library/core/ui/ComboUIClass.php");
+    require_once(__DIR__ . "/system-header.php");
 ?>
     <style>
         #errors {
@@ -14,7 +12,7 @@
             <div id="errors">
                 <?php
                     if (file_exists(__DIR__ . "/tmp/php-error.log")) {
-                        echo str_replace("\n", "<br>", file_get_contents(__DIR__ . "/../../../tmp/php-error.log"));
+                        echo str_replace("\n", "<br>", file_get_contents(__DIR__ . "/tmp/php-error.log"));
 
                     } else {
                         echo "No errors found";
@@ -22,7 +20,7 @@
                 ?>
             </div>
         </div>
-        <button id="clearbutton" class="link3 pad5"><img alt="Clear" src="<?php echo ImageClass::staticURL("clear.png"); ?>" /> Clear</button>
+        <button id="clearbutton" class="link3 pad5"><img alt="Clear" src="images/clear.png" /> Clear</button>
     </div>
     <script>
         $(document).ready(
@@ -46,4 +44,4 @@
         )
     </script>
 <?php
-    require_once(__DIR__ . "/../../../application/template/web/system-footer.php");
+    require_once(__DIR__ . "/system-footer.php");
