@@ -8,12 +8,12 @@
 		function AddPage($orientation = '', $format = '', $rotationOrKeepmargins = false, $tocpage = false) {
 			parent::AddPage($orientation, $format, $rotationOrKeepmargins, $tocpage);
 			
-//			$this->addText( 10, 13, SessionControllerClass::getSiteConfig()->getCompanyname() . " Starter Form", 12, 4, 'B');
-//
-//			$this->DynamicImage(SessionControllerClass::getSiteConfig()->getLogoimageid(), 178.6, 1, 30);
-//			$this->addText( 40, 288, "Trianik Cleaners Ltd - Starter Forms revised August 2015 - Mrs N M Saunders - Managing Director TCL", 8, 4, '');
-//			$this->Rect(5, 21, 200, 259);
-//			$this->Line(48, 21, 48, 279.9);
+			$this->addText( 10, 13, SessionControllerClass::getSiteConfig()->getCompanyname() . " Starter Form", 12, 4, 'B');
+
+			$this->DynamicImage(SessionControllerClass::getSiteConfig()->getLogoimageid(), 178.6, 1, 30);
+			$this->addText( 40, 288, "Trianik Cleaners Ltd - Starter Forms revised August 2015 - Mrs N M Saunders - Managing Director TCL", 8, 4, '');
+			$this->Rect(5, 21, 200, 259);
+			$this->Line(48, 21, 48, 279.9);
 		}
 		
 		function __construct($orientation, $metric, $size, $id) {
@@ -24,7 +24,6 @@
 			$this->AddPage();
 			
 			try {
-                /*
 				$client = new ClientClass();
 				$client->loadRecord($id);
 				
@@ -258,9 +257,7 @@
 				$this->addText( 180, 276, "Y", 8, 3, '');
 				
 				$this->SetTextColor(0, 0, 0);
-				*/
 				/************************ Page 2 *********************/
-/*
 				$this->AddPage();
 				
 				$this->SetFillColor(100, 255, 100);
@@ -319,7 +316,6 @@
 				
 				$this->addText( 10, 101, "Specific Cleaning Requirements", 10, 4, '', 32);
 				$this->addText( 50, 101, $client->getSpecificrequirements(), 8, 3, '', 153);
-				*/
 			} catch (Exception $e) {
 				logError($e->getMessage());
 			}
