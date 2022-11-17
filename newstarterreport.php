@@ -260,7 +260,7 @@
 				$this->SetTextColor(0, 0, 0);
 				
 				/************************ Page 2 *********************/
-				
+/*
 				$this->AddPage();
 				
 				$this->SetFillColor(100, 255, 100);
@@ -319,7 +319,7 @@
 				
 				$this->addText( 10, 101, "Specific Cleaning Requirements", 10, 4, '', 32);
 				$this->addText( 50, 101, $client->getSpecificrequirements(), 8, 3, '', 153);
-				
+				*/
 			} catch (Exception $e) {
 				logError($e->getMessage());
 			}
