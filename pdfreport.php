@@ -57,8 +57,8 @@ class PDFReport extends FPDI {
 
 		// HTML parser
 		$html = strip_tags ( $html, "<b><u><i><a><ul><li><img><p><br><h1><h2><h3><h4><h5><h6><h7><strong><em><font><tr><blockquote>" ); // supprime tous les tags sauf ceux reconnus
-		$html = str_replace ( "\n", ' ', $html ); // remplace retour à la ligne par un espace
-		$a = preg_split ( '/<(.*)>/U', $html, - 1, PREG_SPLIT_DELIM_CAPTURE ); // éclate la chaîne avec les balises
+		$html = str_replace ( "\n", ' ', $html ); // remplace retour ï¿½ la ligne par un espace
+		$a = preg_split ( '/<(.*)>/U', $html, - 1, PREG_SPLIT_DELIM_CAPTURE ); // ï¿½clate la chaï¿½ne avec les balises
 
 		foreach ( $a as $i => $e ) {
 			if ($i % 2 == 0) {
@@ -476,7 +476,8 @@ function RoundedRect($x, $y, $w, $h, $r, $corners = '1234', $style = '')
 		
 		$colX = $r1;
 		$this->colonnes = $tab;
-		while ( list ( $lib, $pos ) = each ( $tab ) ) {
+
+        foreach ($tab as $lib => $pos) {
 			$this->SetXY ( $colX, $y1 + 2 );
 			$this->Cell ( $pos, 1, $lib, 0, 0, "C" );
 			
@@ -490,7 +491,7 @@ function RoundedRect($x, $y, $w, $h, $r, $corners = '1234', $style = '')
 	function addLineFormat($tab) {
 		global $format;
 
-		while ( list ( $lib, $pos ) = each ( $this->colonnes ) ) {
+        foreach ($this->colonnes as $lib => $pos) {
 			if (isset ( $tab ["$lib"] ))
 				$format [$lib] = $tab ["$lib"];
 		}
@@ -501,8 +502,8 @@ function RoundedRect($x, $y, $w, $h, $r, $corners = '1234', $style = '')
 		$ordonnee = 10;
 		$maxSize = $ligne;
 
-		reset ( $this->colonnes );
-		while ( list ( $lib, $pos ) = each ( $this->colonnes ) ) {
+        reset ( $this->colonnes );
+        foreach ($this->colonnes as $lib => $pos) {
 			$longCell = $pos - 2;
 			
 			if (isset($tab [$lib])) {
