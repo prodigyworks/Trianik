@@ -1,5 +1,9 @@
 <?php
 require_once(__DIR__ . "/pgcore-db.php");
+
+header("location: " . SessionControllerClass::getSiteConfig()->getDomainurl() . "/images/underconstruction.jpg");
+exit();
+
 require_once(__DIR__ . "/businessobjects/MessageClass.php");
 require_once(__DIR__ . "/businessobjects/UserClass.php");
 require_once(__DIR__ . "/ui/PageUIClass.php");
